@@ -48,6 +48,7 @@ load_roles()
 
 
 def find_in_roles(uid, role):
+    logging.debug('chequeando uid {} en rol {}'.format(uid, role))
     return role in roles and uid in roles[role]
 
 
