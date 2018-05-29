@@ -24,14 +24,7 @@ API_BASE = os.environ['API_BASE']
 
 
 
-roles = {
-    'ej-rol': [
-        { 
-            'id': 'ejemplo-id',
-            'dni': 'ejemplo-dni'
-        }
-    ]
-}
+roles = {}
 def load_roles():
     r = os.environ['WARDEN_VOLUME_ROOT']
     try:
@@ -40,7 +33,14 @@ def load_roles():
             roles = json.loads(f.read())
     except FileNotFoundError:
         with open(r + '/roles.json','w') as f:
-            global roles
+            roles =  {
+                'ej-rol': [
+                    { 
+                        'id': 'ejemplo-id',
+                        'dni': 'ejemplo-dni'
+                    }
+                ]
+            }
             rs = json.dumps(roles)
             f.write(rs)
 load_roles()
