@@ -41,7 +41,7 @@ class Warden:
             'token':token,
             'profile':profile
         }
-        r = requests.post(self.warden_url + '/profile', verify=self.verify, allow_redirects=False, headers=headers, data=data)
+        r = requests.post(self.warden_url + '/profile', verify=self.verify, allow_redirects=False, headers=headers, json=data)
         if r.ok:
             js = r.json()
             if js['profile'] == True:

@@ -16,19 +16,25 @@ client_id = os.environ['OIDC_CLIENT_ID']
 client_secret = os.environ['OIDC_CLIENT_SECRET']
 rs = TokenIntrospection(client_id, client_secret)
 
-app = Flask(__name__, static_url_path='/src/warden/web')
+app = Flask(__name__)
 app.debug = False
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
 API_BASE = os.environ['API_BASE']
 
-"""
-@app.route(API_BASE + '*', methods=['OPTIONS'])
-def options():
-    if request.method == 'OPTIONS':
-        return 204
-    return 204
-"""
+
+
+roles = {}
+def load_roles():
+    r = os.environ['WARDEN_VOLUME_ROOT']
+    with open(r + '/roles.json','r') as f:
+        global roles
+        roles = json.loads(f.read())
+load_roles()
+
+def find_in_roles(uid, role):
+    return role in roles and uid in roles[role]
+
 
 
 @app.route(API_BASE + '/allowed', methods=['POST'])
@@ -41,9 +47,11 @@ def allowed(token=None):
 @rs.require_token_scopes(scopes=['warden'])
 @jsonapi
 def profile(token=None):
-    return {'profile':True}
-
-
+    data = request.json
+    uid = data['token']['sub']
+    return {
+        'profile': find_in_roles(uid, data['profile'])
+    }
 
 @app.after_request
 def add_header(r):
