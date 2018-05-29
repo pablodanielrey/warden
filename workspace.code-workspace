@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "/src/github/microservices_common"
+		},
+		{
+			"path": "/src/gitlab/stacks"
 		}
 	],
 	"settings": {}
