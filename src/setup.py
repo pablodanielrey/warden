@@ -11,7 +11,7 @@
 
 from setuptools import setup, find_packages
 
-setup(name='warden',
+setup(name='warden-api',
           version='1.0.0.alpha0',
           description='Aplicación para manejar los perfiles de los sistemas',
           url='https://github.com/pablodanielrey/warden',
