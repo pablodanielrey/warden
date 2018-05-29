@@ -24,13 +24,28 @@ API_BASE = os.environ['API_BASE']
 
 
 
-roles = {}
+roles = {
+    'ej-rol': [
+        { 
+            'id': 'ejemplo-id',
+            'dni': 'ejemplo-dni'
+        }
+    ]
+}
 def load_roles():
     r = os.environ['WARDEN_VOLUME_ROOT']
-    with open(r + '/roles.json','r') as f:
-        global roles
-        roles = json.loads(f.read())
+    try:
+        with open(r + '/roles.json','r') as f:
+            global roles
+            roles = json.loads(f.read())
+    except FileNotFoundError:
+        with open(r + '/roles.json','w') as f:
+            global roles
+            rs = json.dumps(roles)
+            f.write(rs)
 load_roles()
+
+
 
 def find_in_roles(uid, role):
     return role in roles and uid in roles[role]
