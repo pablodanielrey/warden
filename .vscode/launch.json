@@ -2,22 +2,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "env": {
-                "LC_ALL": "es_AR.utf-8",
-                "LANG": "es_AR.utf-8"                
-            }
-        },        
-        {
             "name": "Python: Flask (0.11.x or later)",
             "type": "python",
             "request": "launch",
             "module": "flask",
             "env": {
-                "FLASK_APP": "warden.web.main",
+                "FLASK_APP": "warden.api.rest.main",
                 "LC_ALL": "es_AR.utf-8",
                 "LANG": "es_AR.utf-8"
             },
@@ -29,5 +19,15 @@
                 "--port=9010"
             ]
         },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "env": {
+                "LC_ALL": "es_AR.utf-8",
+                "LANG": "es_AR.utf-8"                
+            }
+        }        
     ]
 }

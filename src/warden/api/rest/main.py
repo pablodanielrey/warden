@@ -28,8 +28,8 @@ def options():
         return 204
     return 204
 
-@app.route('/allowed', methods=['GET'])
-@rs.require_valid_token
+@app.route(API_BASE + '/allowed', methods=['POST'])
+@rs.require_token_scopes(scopes=[])
 @jsonapi
 def allowed(token=None):
     return {'allowed':True}

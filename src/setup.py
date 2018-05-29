@@ -28,7 +28,8 @@ setup(name='warden',
           packages=find_packages(exclude=['contrib', 'docs', 'test*']),
           install_requires=['Flask',
                             'flask_jsontools',
-                            'microservices_common'
+                            'microservices_common',
+                            'requests'
                             ],
           entry_points={
             'console_scripts': [
