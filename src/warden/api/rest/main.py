@@ -22,17 +22,27 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 
 API_BASE = os.environ['API_BASE']
 
+"""
 @app.route(API_BASE + '*', methods=['OPTIONS'])
 def options():
     if request.method == 'OPTIONS':
         return 204
     return 204
+"""
+
 
 @app.route(API_BASE + '/allowed', methods=['POST'])
-@rs.require_token_scopes(scopes=[])
+@rs.require_token_scopes(scopes=['warden'])
 @jsonapi
 def allowed(token=None):
     return {'allowed':True}
+
+@app.route(API_BASE + '/profile', methods=['POST'])
+@rs.require_token_scopes(scopes=['warden'])
+@jsonapi
+def profile(token=None):
+    return {'profile':True}
+
 
 
 @app.after_request
@@ -50,6 +60,7 @@ def add_header(r):
         para autorizar el CORS
         https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
     '''
+    """
     o = request.headers.get('Origin', None)
     rm = request.headers.get('Access-Control-Request-Method', None)
     rh = request.headers.get('Access-Control-Request-Headers', None)
@@ -59,6 +70,7 @@ def add_header(r):
     if rh:
         r.headers['Access-Control-Allow-Headers'] = rh
     r.headers['Access-Control-Max-Age'] = 1
+    """
 
     return r
 

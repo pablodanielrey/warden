@@ -21,7 +21,6 @@ class Warden:
         }
         return headers
 
-
     def check_access(self, token, resource, action):
         headers = self._get_auth_headers()
         data = {
@@ -33,5 +32,18 @@ class Warden:
         if r.ok:
             js = r.json()
             if js['allowed'] == True:
+                return js
+        return None
+
+    def has_profile(self, token, profile):
+        headers = self._get_auth_headers()
+        data = {
+            'token':token,
+            'profile':profile
+        }
+        r = requests.post(self.warden_url + '/profile', verify=self.verify, allow_redirects=False, headers=headers, data=data)
+        if r.ok:
+            js = r.json()
+            if js['profile'] == True:
                 return js
         return None
