@@ -49,8 +49,10 @@ load_roles()
 
 def find_in_roles(uid, role):
     logging.debug('chequeando uid {} en rol {}'.format(uid, role))
-    return role in roles and uid in roles[role]
-
+    if role not in roles:
+        return False
+    uids = (u['id'] for u in roles[role])
+    return uid in uids
 
 
 @app.route(API_BASE + '/allowed', methods=['POST'])
