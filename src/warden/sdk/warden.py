@@ -35,15 +35,21 @@ class Warden:
                 return js
         return None
 
-    def has_profile(self, token, profile):
+    def _has_profiles(self, token, profiles, op):
         headers = self._get_auth_headers()
         data = {
             'token':token,
-            'profile':profile
+            'profiles':profiles,
+            'op':op
         }
         r = requests.post(self.warden_url + '/profile', verify=self.verify, allow_redirects=False, headers=headers, json=data)
         if r.ok:
             js = r.json()
-            if js['profile'] == True:
-                return js
+            return js
         return None
+
+    def has_one_profile(self, token, profiles=[]):
+        return self._has_profiles(token, profiles, op='OR')
+
+    def has_all_profiles(self, token, profiles=[]):
+        return self._has_profiles(token, profiles, op='AND')

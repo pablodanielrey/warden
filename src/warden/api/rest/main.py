@@ -22,8 +22,6 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 
 API_BASE = os.environ['API_BASE']
 
-
-
 roles = {}
 def load_roles():
     r = os.environ['WARDEN_VOLUME_ROOT']
@@ -45,8 +43,6 @@ def load_roles():
             f.write(rs)
 load_roles()
 
-
-
 def find_in_roles(uid, role):
     logging.debug('chequeando uid {} en rol {}'.format(uid, role))
     if role not in roles:
@@ -59,7 +55,7 @@ def find_in_roles(uid, role):
 @rs.require_token_scopes(scopes=['warden'])
 @jsonapi
 def allowed(token=None):
-    return {'allowed':True}
+    return {'allowed':False, 'description':'Not implemented'}
 
 @app.route(API_BASE + '/profile', methods=['POST'])
 @rs.require_token_scopes(scopes=['warden'])
@@ -67,9 +63,26 @@ def allowed(token=None):
 def profile(token=None):
     data = request.json
     uid = data['token']['sub']
+    one = data['op'] == 'OR'
+    ok = False
+    if one:
+        ''' solo uno tiene que matchear '''
+        for p in data['profiles']:
+            if find_in_roles(uid, p):
+                ok = True
+                break
+    else:
+        ''' todos tienen que matchear '''
+        ok = True
+        for p in data['profiles']:
+            ok = ok & find_in_roles(uid, p)
+            if not ok:
+                break
+
     return {
-        'profile': find_in_roles(uid, data['profile'])
+        'profile': ok
     }
+
 
 @app.after_request
 def add_header(r):
