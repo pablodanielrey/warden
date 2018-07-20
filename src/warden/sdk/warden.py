@@ -5,8 +5,8 @@ from oidc.oidc import ClientCredentialsGrant
 
 class Warden:
 
-    def __init__(self, api_url, client_id, client_secret):
-        self.verify = True
+    def __init__(self, api_url, client_id, client_secret, verify=True):
+        self.verify = verify
         self.warden_url = api_url
         self.client_id = client_id
         self.client_secret = client_secret
