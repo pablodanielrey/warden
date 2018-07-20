@@ -10,11 +10,13 @@ from flask import Flask, request, send_from_directory, jsonify, redirect, sessio
 from flask_jsontools import jsonapi
 from werkzeug.contrib.fixers import ProxyFix
 
+VERIFY_SSL = bool(int(os.environ.get('VERIFY_SSL',0)))
+
 import oidc
 from oidc.oidc import TokenIntrospection
 client_id = os.environ['OIDC_CLIENT_ID']
 client_secret = os.environ['OIDC_CLIENT_SECRET']
-rs = TokenIntrospection(client_id, client_secret)
+rs = TokenIntrospection(client_id, client_secret, verify=VERIFY_SSL)
 
 app = Flask(__name__)
 app.debug = False
