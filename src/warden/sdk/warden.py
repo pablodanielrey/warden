@@ -1,12 +1,15 @@
 
 import requests
+from functools import wraps
+import flask
 from flask import Flask
 from oidc.oidc import ClientCredentialsGrant
 
 class Warden:
 
-    def __init__(self, oidc_url, api_url, client_id, client_secret, verify=True):
+    def __init__(self, oidc_url, api_url, client_id, client_secret, verify=True, realm=''):
         self.verify = verify
+        self.realm = realm
         self.warden_url = api_url
         self.client_id = client_id
         self.client_secret = client_secret
@@ -75,7 +78,7 @@ class Warden:
             if r.ok:
                 js = r.json()
                 if js['token']:
-                    kwargs['token'] = tk
+                    kwargs['token'] = js['token']
                     return f(*args, **kwargs)
 
             return self._invalid_token()
