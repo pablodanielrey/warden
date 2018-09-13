@@ -1,8 +1,13 @@
+import requests
+import flask
+from functools import wraps
+
 class TokenIntrospection:
 
-    def __init__(self, oidc_url, verify=False):
+    def __init__(self, oidc_url, verify=False, realm=''):
         self.oidc_url = oidc_url
         self.verify = verify
+        self.realm = realm
         self.introspect_url = '{}/oauth2/introspect'.format(self.oidc_url)
 
     def _bearer_token(self, headers):
@@ -43,7 +48,7 @@ class TokenIntrospection:
                     tscopes = tk['scope'].lower().split(' ')
                     for s in scopes:
                         if s not in tscopes:
-                            return self.insufficient_scope()
+                            return self._insufficient_scope()
                 kwargs['token'] = tk
                 #kwargs['access'] = acc
                 return f(*args, **kwargs)
@@ -67,13 +72,13 @@ class TokenIntrospection:
         return decorated_function
 
     def _invalid_request(self):
-        return self.require_auth(text='Bad Request', error='invalid_request', status=400)
+        return self._require_auth(text='Bad Request', error='invalid_request', status=400)
 
     def _invalid_token(self):
-        return self.require_auth(text='Unauthorized', error='invalid_token', status=401)
+        return self._require_auth(text='Unauthorized', error='invalid_token', status=401)
 
     def _insufficient_scope(self):
-        return self.require_auth(text='Forbidden', error='insufficient_scope', status=403)
+        return self._require_auth(text='Forbidden', error='insufficient_scope', status=403)
 
     def _require_auth(self, text='Unauthorized', error=None, status=401, error_description=''):
         headers = None
