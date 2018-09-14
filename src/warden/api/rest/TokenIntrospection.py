@@ -24,6 +24,7 @@ class TokenIntrospection:
         if len(scopes) > 0:
             data['scope'] = ' '.join(scopes)
         headers = {
+            'X-Forwarded-Proto':'https',
             'Accept':'application/json'
         }
         r = requests.post(self.introspect_url, verify=self.verify, allow_redirects=False, headers=headers, data=data)
