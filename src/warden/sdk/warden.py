@@ -67,7 +67,7 @@ class Warden:
         '''
         token = self._bearer_token(flask.request.headers)
         if not token:
-            return self._invalid_request()
+            return None
         headers = self._get_auth_headers()
         data = {
             'token':token
@@ -85,7 +85,7 @@ class Warden:
         def decorated_function(*args, **kwargs):
             tk = self._require_valid_token()
             if not tk:
-                return None
+                return self._invalid_request()
             kwargs['token'] = tk
             return f(*args, **kwargs)
         return decorated_function
