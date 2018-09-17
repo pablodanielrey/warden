@@ -61,28 +61,33 @@ class Warden:
         introspección del token
     """
 
+    def _require_valid_token(self):
+        '''
+            Recupera y chequea el token por validez
+        '''
+        token = self._bearer_token(flask.request.headers)
+        if not token:
+            return self._invalid_request()
+        headers = self._get_auth_headers()
+        data = {
+            'token':token
+        }
+        r = requests.post(self.warden_url + '/introspect', verify=self.verify, allow_redirects=False, headers=headers, json=data)
+        if r.ok:
+            js = r.json()
+            if js['token']:
+                return js['token']
+
+        return None
+
     def require_valid_token(self, f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            '''
-                Recupera y chequea el token por validez
-            '''
-            token = self._bearer_token(flask.request.headers)
-            if not token:
-                return self._invalid_request()
-            headers = self._get_auth_headers()
-            data = {
-                'token':token
-            }
-            r = requests.post(self.warden_url + '/introspect', verify=self.verify, allow_redirects=False, headers=headers, json=data)
-            if r.ok:
-                js = r.json()
-                if js['token']:
-                    kwargs['token'] = js['token']
-                    return f(*args, **kwargs)
-
-            return self._invalid_token()
-
+            tk = self._require_valid_token()
+            if not tk:
+                return self._invalid_token()
+            kwargs['token'] = tk
+            return f(*args, **kwargs)
         return decorated_function
 
     def _bearer_token(self, headers):
