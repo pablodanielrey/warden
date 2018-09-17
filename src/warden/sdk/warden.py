@@ -85,7 +85,7 @@ class Warden:
         def decorated_function(*args, **kwargs):
             tk = self._require_valid_token()
             if not tk:
-                return self._invalid_token()
+                return None
             kwargs['token'] = tk
             return f(*args, **kwargs)
         return decorated_function
