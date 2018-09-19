@@ -12,7 +12,7 @@ COPY docker/pip.conf /etc/
 COPY docker/entrypoint.sh /
 COPY docker/supervisor/rest.conf /etc/supervisor/conf.d
 COPY src /src
-RUN cd /src && pip3 install --trusted-host pypi.econo.unlp.edu.ar --upgrade -e .
+RUN cd /src && pip3 install -U --upgrade-strategy=eager --trusted-host pypi.econo.unlp.edu.ar --upgrade -e .
 
 #hago deploy de la librería para que los demas sistemas la puedan usar
 COPY docker/.pypirc /root/
@@ -20,6 +20,6 @@ RUN cd /src && python setup.py sdist upload -r internal
 
 WORKDIR /src
 
-EXPOSE 5000
+EXPOSE 10502
 
 ENTRYPOINT ["/entrypoint.sh"]

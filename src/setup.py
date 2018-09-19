@@ -12,7 +12,7 @@
 from setuptools import setup, find_packages
 
 setup(name='warden-api',
-          version='1.0.0.alpha3',
+          version='1.0.1.a4',
           description='Aplicación para manejar los perfiles de los sistemas',
           url='https://github.com/pablodanielrey/warden',
           author='Desarrollo DiTeSi, FCE',
@@ -30,7 +30,8 @@ setup(name='warden-api',
                             'flask_jsontools',
                             'gunicorn',
                             'microservices_common',
-                            'requests'
+                            'requests',
+                            'ptvsd'
                             ],
           entry_points={
             'console_scripts': [
