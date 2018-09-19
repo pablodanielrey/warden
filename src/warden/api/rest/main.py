@@ -129,7 +129,7 @@ def add_header(r):
     return r
 
 def main():
-    app.run(host='0.0.0.0', port=9010, debug=True)
+    app.run(host='0.0.0.0', port=10502, debug=False)
 
 if __name__ == "__main__":
     main()

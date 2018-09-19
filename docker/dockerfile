@@ -21,6 +21,4 @@ RUN cd /src && python setup.py sdist upload -r internal
 
 WORKDIR /src
 
-EXPOSE 5000
-
 ENTRYPOINT ["/entrypoint.sh"]
