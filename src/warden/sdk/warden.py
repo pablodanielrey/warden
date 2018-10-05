@@ -1,16 +1,19 @@
 
 import requests
+from functools import wraps
+import flask
 from flask import Flask
 from oidc.oidc import ClientCredentialsGrant
 
 class Warden:
 
-    def __init__(self, api_url, client_id, client_secret, verify=True):
+    def __init__(self, oidc_url, api_url, client_id, client_secret, verify=True, realm=''):
         self.verify = verify
+        self.realm = realm
         self.warden_url = api_url
         self.client_id = client_id
         self.client_secret = client_secret
-        self.client_credentials = ClientCredentialsGrant(self.client_id, self.client_secret, self.verify)
+        self.client_credentials = ClientCredentialsGrant(oidc_url, self.client_id, self.client_secret, self.verify)
 
     def _get_auth_headers(self):
         r = self.client_credentials.access_token(scopes=['warden'])
@@ -53,3 +56,64 @@ class Warden:
 
     def has_all_profiles(self, token, profiles=[]):
         return self._has_profiles(token, profiles, op='AND')
+
+    """
+        introspección del token
+    """
+
+    def _require_valid_token(self):
+        '''
+            Recupera y chequea el token por validez
+        '''
+        token = self._bearer_token(flask.request.headers)
+        if not token:
+            return None
+        headers = self._get_auth_headers()
+        data = {
+            'token':token
+        }
+        r = requests.post(self.warden_url + '/introspect', verify=self.verify, allow_redirects=False, headers=headers, json=data)
+        if r.ok:
+            js = r.json()
+            if js['token']:
+                return js['token']
+
+        return None
+
+    def require_valid_token(self, f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            tk = self._require_valid_token()
+            if not tk:
+                return self._invalid_request()
+            kwargs['token'] = tk
+            return f(*args, **kwargs)
+        return decorated_function
+
+    def _bearer_token(self, headers):
+        if 'Authorization' in headers:
+            auth = headers['Authorization'].split(' ')
+            if auth[0].lower() == 'bearer':
+                return auth[1]
+        return None
+
+    def _invalid_request(self):
+        return self._require_auth(text='Bad Request', error='invalid_request', status=400)
+
+    def _invalid_token(self):
+        return self._require_auth(text='Unauthorized', error='invalid_token', status=401)
+
+    def _insufficient_scope(self):
+        return self._require_auth(text='Forbidden', error='insufficient_scope', status=403)
+
+    def _require_auth(self, text='Unauthorized', error=None, status=401, error_description=''):
+        headers = None
+        if error:
+            headers = {
+                'WWW-Authenticate': 'Basic realm=\"{}\", error=\"{}\", error_description:\"{}\"'.format(self.realm, error, error_description)
+            }
+        else:
+            headers = {
+                'WWW-Authenticate': 'Basic realm=\"{}\"'.format(self.realm)
+            }
+        return (text, status, headers)

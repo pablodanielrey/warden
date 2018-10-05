@@ -10,11 +10,11 @@ from flask import Flask, request, send_from_directory, jsonify, redirect, sessio
 from flask_jsontools import jsonapi
 from werkzeug.contrib.fixers import ProxyFix
 
-import oidc
-from oidc.oidc import TokenIntrospection
-client_id = os.environ['OIDC_CLIENT_ID']
-client_secret = os.environ['OIDC_CLIENT_SECRET']
-rs = TokenIntrospection(client_id, client_secret)
+VERIFY_SSL = bool(int(os.environ.get('VERIFY_SSL',0)))
+OIDC_ADMIN_URL = os.environ['OIDC_ADMIN_URL']
+
+from .TokenIntrospection import TokenIntrospection
+rs = TokenIntrospection(OIDC_ADMIN_URL, verify=VERIFY_SSL)
 
 app = Flask(__name__)
 app.debug = False
@@ -83,6 +83,21 @@ def profile(token=None):
         'profile': ok
     }
 
+@app.route(API_BASE + '/introspect', methods=['POST'])
+@rs.require_token_scopes(scopes=['warden'])
+@jsonapi
+def introspect(token=None):
+    data = request.get_json()
+    token = data['token']
+    scopes = []
+    if 'scopes' in data:
+        scopes = data['scopes']
+
+    tk = rs.introspect_token(token, scopes)
+    return {
+        'token': tk
+    }
+
 
 @app.after_request
 def add_header(r):
@@ -114,7 +129,7 @@ def add_header(r):
     return r
 
 def main():
-    app.run(host='0.0.0.0', port=9010, debug=True)
+    app.run(host='0.0.0.0', port=10502, debug=False)
 
 if __name__ == "__main__":
     main()
