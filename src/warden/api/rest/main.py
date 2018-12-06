@@ -16,6 +16,8 @@ OIDC_ADMIN_URL = os.environ['OIDC_ADMIN_URL']
 from .TokenIntrospection import TokenIntrospection
 rs = TokenIntrospection(OIDC_ADMIN_URL, verify=VERIFY_SSL)
 
+logger = logging.getLogger('warden')
+
 app = Flask(__name__)
 app.debug = False
 app.wsgi_app = ProxyFix(app.wsgi_app)
@@ -24,12 +26,15 @@ API_BASE = os.environ['API_BASE']
 
 roles = {}
 def load_roles():
+    logger.debug('cargando roles')
     r = os.environ['WARDEN_VOLUME_ROOT']
     try:
         with open(r + '/roles.json','r') as f:
             global roles
             roles = json.loads(f.read())
+            logging.debug('roles: {}'.format(roles))
     except FileNotFoundError:
+        logger.warn('roles no encontrados, se genera un archivo de ejemplo')
         with open(r + '/roles.json','w') as f:
             roles =  {
                 'ej-rol': [
@@ -44,12 +49,13 @@ def load_roles():
 load_roles()
 
 def find_in_roles(uid, role):
-    logging.debug('chequeando uid {} en rol {}'.format(uid, role))
+    logger.debug('chequeando uid {} en rol {}'.format(uid, role))
     if role not in roles:
+        logger.debug('no encontrado')
         return False
     uids = (u['id'] for u in roles[role])
+    logger.debug('encontrados: {}'.format(uids))
     return uid in uids
-
 
 @app.route(API_BASE + '/allowed', methods=['POST'])
 @rs.require_token_scopes(scopes=['warden'])
