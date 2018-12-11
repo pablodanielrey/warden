@@ -29,7 +29,7 @@ setup(name='warden-api',
           install_requires=['Flask',
                             'flask_jsontools',
                             'gunicorn',
-                            'microservices_common',
+                            'microservices_common>=2.0.4a4',
                             'requests'
                             ],
           entry_points={
