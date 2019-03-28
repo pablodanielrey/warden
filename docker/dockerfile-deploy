@@ -16,8 +16,8 @@ COPY src /src
 RUN cd /src && pip3 install --trusted-host pypi.econo.unlp.edu.ar --upgrade -e .
 
 #hago deploy de la librería para que los demas sistemas la puedan usar
-#COPY docker/.pypirc /root/
-#RUN cd /src && python setup.py sdist upload -r internal
+COPY docker/.pypirc /root/
+RUN cd /src && python setup.py sdist upload -r internal
 
 WORKDIR /src
 
