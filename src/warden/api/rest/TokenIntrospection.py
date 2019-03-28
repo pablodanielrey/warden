@@ -1,10 +1,13 @@
 import requests
 import flask
+import logging
 from functools import wraps
+
 
 class TokenIntrospection:
 
     def __init__(self, oidc_url, verify=False, realm=''):
+        self.logging = logging.getLogger('warden')
         self.oidc_url = oidc_url
         self.verify = verify
         self.realm = realm
@@ -27,10 +30,13 @@ class TokenIntrospection:
             'X-Forwarded-Proto':'https',
             'Accept':'application/json'
         }
+        self.logging.debug('data: {}'.format(data))
         r = requests.post(self.introspect_url, verify=self.verify, allow_redirects=False, headers=headers, data=data)
         if not r.ok:
+            logging.debug(r)
             return None
         tk = r.json()
+        self.logging.debug('tk: {}'.format(tk))
         if not tk or not tk['active']:
             return None
         return tk
@@ -40,6 +46,7 @@ class TokenIntrospection:
             @wraps(f)
             def wrapper(*args, **kwargs):
                 token = self._bearer_token(flask.request.headers)
+                self.logging.debug('require_token_scopes: {} {}'.format(token, scopes))
                 if not token:
                     return self._invalid_token()
                 tk = self.introspect_token(token)
@@ -49,6 +56,7 @@ class TokenIntrospection:
                     tscopes = tk['scope'].lower().split(' ')
                     for s in scopes:
                         if s not in tscopes:
+                            self.logging.warn('scope insuficiente')
                             return self._insufficient_scope()
                 kwargs['token'] = tk
                 #kwargs['access'] = acc
