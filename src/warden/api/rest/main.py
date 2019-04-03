@@ -105,7 +105,7 @@ def allowed(token=None):
 
 
 @app.route(API_BASE + '/permissions', methods=['GET'])
-@rs.require_valid_token()
+@rs.require_valid_token
 @jsonapi
 def permissions(token=None):
     if not token:
