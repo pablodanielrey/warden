@@ -45,23 +45,23 @@ def _load_permissions():
             global permissions
             permissions = json.loads(f.read())
             logging.debug('permisos: {}'.format(permissions))
-        except FileNotFoundError as e:
-            logger.warn('archivo de permisos no encontrado')
-            with open(r + '/permissions.json', 'w') as f:
-                permissions = {
-                    'uid-1': [
-                        'urn:sistema:recurso:permiso:scope',
-                        'urn:assistance:reporte-marcaciones:read',
-                        'urn:assistance:reporte-horarios:*',
-                        'urn:assistance:reporte-horarios:read:restricted'
-                    ],
-                    'default': [
-                        'urn:*:*:read:own',
-                        'urn:*:*:read:restricted'
-                    ]
-                }
-                rs = json.dumps(permissions)
-                f.write(rs)
+    except FileNotFoundError as e:
+        logger.warn('archivo de permisos no encontrado')
+        with open(r + '/permissions.json', 'w') as f:
+            permissions = {
+                'uid-1': [
+                    'urn:sistema:recurso:permiso:scope',
+                    'urn:assistance:reporte-marcaciones:read',
+                    'urn:assistance:reporte-horarios:*',
+                    'urn:assistance:reporte-horarios:read:restricted'
+                ],
+                'default': [
+                    'urn:*:*:read:own',
+                    'urn:*:*:read:restricted'
+                ]
+            }
+            rs = json.dumps(permissions)
+            f.write(rs)
 _load_permissions()
 
 roles = {}
