@@ -45,7 +45,7 @@ def _load_permissions():
             global permissions
             permissions = json.loads(f.read())
             logging.debug('permisos: {}'.format(permissions))
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             logger.warn('archivo de permisos no encontrado')
             with open(r + '/permissions.json', 'w') as f:
                 permissions = {
@@ -73,7 +73,7 @@ def _load_roles():
             global roles
             roles = json.loads(f.read())
             logging.debug('roles: {}'.format(roles))
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         logger.warn('roles no encontrados, se genera un archivo de ejemplo')
         with open(r + '/roles.json','w') as f:
             roles =  {
