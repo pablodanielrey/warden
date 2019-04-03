@@ -24,8 +24,48 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 
 API_BASE = os.environ['API_BASE']
 
+permissions = {}
+def _load_permissions():
+    """
+        comodines:
+            * = cualquiera
+        permisos disponibles:
+            read (lectura) 
+            write (actualización) 
+            create (creación)
+        scopes:
+            any (es el por defecto)
+            own (recurso propio)
+            restricted (restringido por el modelo del sistema)
+    """
+    logging.debug('cargando permisos')
+    r = os.environ['WARDEN_VOLUME_ROOT']
+    try:
+        with open(r + '/permissions.json','r') as f:
+            global permissions
+            permissions = json.loads(f.read())
+            logging.debug('permisos: {}'.format(permissions))
+        except FileNotFoundError:
+            logger.warn('archivo de permisos no encontrado')
+            with open(r + '/permissions.json', 'w') as f:
+                permissions = {
+                    'uid-1': [
+                        'urn:sistema:recurso:permiso:scope',
+                        'urn:assistance:reporte-marcaciones:read',
+                        'urn:assistance:reporte-horarios:*',
+                        'urn:assistance:reporte-horarios:read:restricted'
+                    ],
+                    'default': [
+                        'urn:*:*:read:own',
+                        'urn:*:*:read:restricted'
+                    ]
+                }
+                rs = json.dumps(permissions)
+                f.write(rs)
+_load_permissions()
+
 roles = {}
-def load_roles():
+def _load_roles():
     logger.debug('cargando roles')
     r = os.environ['WARDEN_VOLUME_ROOT']
     try:
@@ -46,7 +86,7 @@ def load_roles():
             }
             rs = json.dumps(roles)
             f.write(rs)
-load_roles()
+_load_roles()
 
 def find_in_roles(uid, role):
     logger.debug('chequeando uid {} en rol {}'.format(uid, role))
@@ -62,6 +102,32 @@ def find_in_roles(uid, role):
 @jsonapi
 def allowed(token=None):
     return {'allowed':False, 'description':'Not implemented'}
+
+
+@app.route(API_BASE + '/permissions', methods=['GET'])
+@rs.require_valid_token()
+@jsonapi
+def permissions(token=None):
+    if not token:
+        return {
+            'status':400,
+            'description': 'no permitido'
+        }
+    uid = token['sub']
+    try:
+        resp = {
+            'status':200
+        }
+        if uid in permissions:
+            resp['granted'] = permissions[uid]
+        else:
+            resp['granted'] = permissions['default']
+        return resp
+    except Exception as e:
+        return {
+            'stauts':500,
+            'description': f'error obteniendo los permisos para {uid}'
+        }
 
 @app.route(API_BASE + '/profile', methods=['POST'])
 @rs.require_token_scopes(scopes=['warden'])
