@@ -30,6 +30,7 @@ def _load_permissions():
         comodines:
             * = cualquiera
         permisos disponibles:
+            delete (eliminar)
             read (lectura) 
             write (actualización) 
             create (creación)
