@@ -61,6 +61,20 @@ def _load_permissions():
                     'urn:assistance:reporte-horarios:*',
                     'urn:assistance:reporte-horarios:read:restricted'
                 ],
+                'assistance-super-admin': [
+                    'urn:assistance:users:read',
+                    'urn:assistance:schedule:delete',
+                    'urn:assistance:schedule:create',
+                    'urn:assistance:logs:create',
+                    'urn:assistance:logs:read',
+                    'urn:assistance:devices:read',
+                    'urn:assistance:justifications:read',
+                    'urn:assistance:justifications:create',
+                    'urn:assistance:justifications:delete',
+                    'urn:assistance:justifications:update',
+                    'urn:assistance:justification-date:create',
+                    'urn:assistance:justification-date:delete'
+                ],
                 'default': [
                     'urn:*:*:read:self',
                     'urn:*:*:read:many:restricted',
