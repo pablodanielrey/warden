@@ -32,11 +32,16 @@ def _load_permissions():
         permisos disponibles:
             delete (eliminar)
             read (lectura) 
-            write (actualización) 
+            update (actualización) 
             create (creación)
         scopes:
             any (es el por defecto)
-            own (recurso propio)
+            self (recurso propio)
+            one (dentro de la misma unidad organizativa)
+            sub (sub unidades organizatibas)
+            many (sub + one)
+            
+        restriciones:        
             restricted (restringido por el modelo del sistema)
     """
     logging.debug('cargando permisos')
@@ -51,14 +56,14 @@ def _load_permissions():
         with open(r + '/permissions.json', 'w') as f:
             permissions = {
                 'uid-1': [
-                    'urn:sistema:recurso:permiso:scope',
+                    'urn:sistema:recurso:permiso:scope:restriccion',
                     'urn:assistance:reporte-marcaciones:read',
                     'urn:assistance:reporte-horarios:*',
                     'urn:assistance:reporte-horarios:read:restricted'
                 ],
                 'default': [
-                    'urn:*:*:read:own',
-                    'urn:*:*:read:restricted'
+                    'urn:*:*:read:self',
+                    'urn:*:*:read:many:restricted'
                 ]
             }
             rs = json.dumps(permissions)
