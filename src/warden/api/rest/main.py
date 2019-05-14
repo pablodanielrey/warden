@@ -63,7 +63,18 @@ def _load_permissions():
                 ],
                 'default': [
                     'urn:*:*:read:self',
-                    'urn:*:*:read:many:restricted'
+                    'urn:*:*:read:many:restricted',
+                    'urn:assistance:users:read:self',
+                    'urn:assistance:places:read:many',
+                    'urn:assistance:assistance-report:read:many:restricted',
+                    'urn:assistance:justifications-report:read:many:restricted',
+                    'urn:assistance:general-assistance-report:read:many:restricted',
+                    'urn:assistance:schedule:read:many:restricted',
+                    'urn:assistance:schedule:read:self',
+                    'urn:assistance:justifications:read:many:restricted',
+                    'urn:assistance:justification-date:create:many:restricted',
+                    'urn:assistance:justification-date:delete:many:restricted',
+                    'urn:assistance:justification-date:read:self'                    
                 ]
             }
             rs = json.dumps(permissions)
