@@ -35,7 +35,7 @@ def _load_permissions():
             update (actualización) 
             create (creación)
         scopes:
-            any (es el por defecto)
+            any (es el por defecto) = *
             self (recurso propio)
             one (dentro de la misma unidad organizativa)
             sub (sub unidades organizatibas)
@@ -46,53 +46,16 @@ def _load_permissions():
     """
     logging.debug('cargando permisos')
     r = os.environ['WARDEN_VOLUME_ROOT']
+    from . import permisos
     try:
-        with open(r + '/permissions.json','r') as f:
-            global permissions
-            permissions = json.loads(f.read())
-            logging.debug('permisos: {}'.format(permissions))
+        fp = r + '/permissions.json'
+        global permissions
+        permissions = permisos.cargar_permisos(fp)
+        logging.debug('permisos: {}'.format(permissions))
     except FileNotFoundError as e:
         logger.warn('archivo de permisos no encontrado')
-        with open(r + '/permissions.json', 'w') as f:
-            permissions = {
-                'uid-1': [
-                    'urn:sistema:recurso:permiso:scope:restriccion',
-                    'urn:assistance:reporte-marcaciones:read',
-                    'urn:assistance:reporte-horarios:*',
-                    'urn:assistance:reporte-horarios:read:restricted'
-                ],
-                'assistance-super-admin': [
-                    'urn:assistance:users:read',
-                    'urn:assistance:schedule:delete',
-                    'urn:assistance:schedule:create',
-                    'urn:assistance:logs:create',
-                    'urn:assistance:logs:read',
-                    'urn:assistance:devices:read',
-                    'urn:assistance:justifications:read',
-                    'urn:assistance:justifications:create',
-                    'urn:assistance:justifications:delete',
-                    'urn:assistance:justifications:update',
-                    'urn:assistance:justification-date:create',
-                    'urn:assistance:justification-date:delete'
-                ],
-                'default': [
-                    'urn:*:*:read:self',
-                    'urn:*:*:read:many:restricted',
-                    'urn:assistance:users:read:self',
-                    'urn:assistance:places:read:many',
-                    'urn:assistance:assistance-report:read:many:restricted',
-                    'urn:assistance:justifications-report:read:many:restricted',
-                    'urn:assistance:general-assistance-report:read:many:restricted',
-                    'urn:assistance:schedule:read:many:restricted',
-                    'urn:assistance:schedule:read:self',
-                    'urn:assistance:justifications:read:many:restricted',
-                    'urn:assistance:justification-date:create:many:restricted',
-                    'urn:assistance:justification-date:delete:many:restricted',
-                    'urn:assistance:justification-date:read:self'                    
-                ]
-            }
-            rs = json.dumps(permissions)
-            f.write(rs)
+        fp = r + '/permissions.json'
+        permisos._generar_ejemplo(fp)
 _load_permissions()
 
 roles = {}
@@ -211,56 +174,15 @@ def all_permissions(token=None):
 @jsonapi
 def has_permissions(token=None):
     assert token is not None
+    from . import permisos
     uid = token['sub']
     perms = request.json
     if 'permissions' in perms:
-        for perm in perms['permissions']:
-            params = perm.split(':')
-            
-            sistema = params[1]
-            recurso = params[2]
-            operacion = params[3]
-            if len(params) > 4:
-                alcance = params[4]
-            if len(params) > 5:
-                modelo = params[6]
-            
-
-
-    return {'status':500, 'Invalid'}
-
-    perms = []
-    if uid in permissions:
-        perms.extend(permissions[uid])
-    perms.extend(permissions['default'])
-    return perms
-
-"""
-    parsea el string definido del permiso y retora un diccionario que lo define
-"""
-def _parsear_permiso(perm):
-    arr = perm.split(':')
-    ret = {
-        'sistema': arr[1],
-        'recurso': arr[2],
-        'operacion': arr[3],
-        'alcance': '*',
-        'modelo': '*'
-    }
-    if len(arr) > 4:
-        ret['alcance'] = arr[4]
-    if len(arr) > 5:
-        ret['modelo'] = arr[5]
-    return ret
-
-def _obtener_arbol_permisos(uid):
-    if uid not in permissions:
-        return None
-    for p in permissions[uid]:
-        arr = p.split(':')
-        sistema = arr[1]
-        recurso = arr[2]
-
+        if permisos.chequear_permisos(uid, perms['permissions'], permissions):
+            return {'status':200, 'description':'ok'}
+        else:
+            return {'status':403, 'description':'forbidden'}
+    return {'status':500, 'description':'Invalid'}
 
 
 

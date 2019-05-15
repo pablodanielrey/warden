@@ -36,15 +36,15 @@ class Operacion:
                 permitido = permitido or self._chequear_alcance_modelo(arbol_recurso[operacion])
         return True
 
-def _cargar_permisos():
+def cargar_permisos(fp):
     import json
-    with open('permissions.json','r') as f:
+    with open(fp,'r') as f:
         permissions = json.loads(f.read())
         return permissions
 
-def _generar_ejemplo():
+def _generar_ejemplo(fp):
     import json
-    with open('permissions.json', 'w') as f:
+    with open(fp, 'w') as f:
         permissions = {
             'assistance-super-admin': [
                 'urn:assistance:users:read',
