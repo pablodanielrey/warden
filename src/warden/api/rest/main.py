@@ -202,6 +202,69 @@ def all_permissions(token=None):
     perms.extend(permissions['default'])
     return perms
 
+"""
+    chequea que la el usuario identificado por el token tenga los permisos pasados en el requerimineto:
+    {'permissions':[perm1, perm2, perm3]}
+"""
+@app.route(API_BASE + '/has_permissions', methods=['POST'])
+@rs.require_valid_token
+@jsonapi
+def has_permissions(token=None):
+    assert token is not None
+    uid = token['sub']
+    perms = request.json
+    if 'permissions' in perms:
+        for perm in perms['permissions']:
+            params = perm.split(':')
+            
+            sistema = params[1]
+            recurso = params[2]
+            operacion = params[3]
+            if len(params) > 4:
+                alcance = params[4]
+            if len(params) > 5:
+                modelo = params[6]
+            
+
+
+    return {'status':500, 'Invalid'}
+
+    perms = []
+    if uid in permissions:
+        perms.extend(permissions[uid])
+    perms.extend(permissions['default'])
+    return perms
+
+"""
+    parsea el string definido del permiso y retora un diccionario que lo define
+"""
+def _parsear_permiso(perm):
+    arr = perm.split(':')
+    ret = {
+        'sistema': arr[1],
+        'recurso': arr[2],
+        'operacion': arr[3],
+        'alcance': '*',
+        'modelo': '*'
+    }
+    if len(arr) > 4:
+        ret['alcance'] = arr[4]
+    if len(arr) > 5:
+        ret['modelo'] = arr[5]
+    return ret
+
+def _obtener_arbol_permisos(uid):
+    if uid not in permissions:
+        return None
+    for p in permissions[uid]:
+        arr = p.split(':')
+        sistema = arr[1]
+        recurso = arr[2]
+
+
+
+
+
 @app.route(API_BASE + '/introspect', methods=['POST'])
 @rs.require_token_scopes(scopes=['warden'])
 @jsonapi
