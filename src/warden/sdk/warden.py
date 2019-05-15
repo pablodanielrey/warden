@@ -57,6 +57,25 @@ class Warden:
     def has_all_profiles(self, token, profiles=[]):
         return self._has_profiles(token, profiles, op='AND')
 
+
+    """
+        esquema nuevo de permisos
+        el token de consulta a warden se realiza usando el mismo token de usuario
+    """
+    def get_permissions(self, token):
+        headers = {
+            'Authorization': 'Bearer {}'.format(token),
+            'Accept':'application/json'
+        }
+        r = requests.get(self.warden_url + '/all_permissions', verify=self.verify, allow_redirects=False, headers=headers)
+        if r.ok:
+            js = r.json()
+            return js
+        return None
+
+    def has_permission(self, token, perms=[]):
+        pass
+
     """
         introspección del token
     """

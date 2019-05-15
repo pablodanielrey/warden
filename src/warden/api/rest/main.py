@@ -112,11 +112,13 @@ def get_permissions(token=None):
         resp = {
             'status':200
         }
+        perms = []
         if uid in permissions:
-            resp['granted'] = permissions[uid]
-        else:
-            resp['granted'] = permissions['default']
+            perms.extend(permissions[uid])
+        perms.extend(permissions['default'])            
+        resp['granted'] = perms
         return resp
+
     except Exception as e:
         return {
             'stauts':500,
@@ -218,7 +220,6 @@ def add_header(r):
         para autorizar el CORS
         https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
     '''
-    """
     o = request.headers.get('Origin', None)
     rm = request.headers.get('Access-Control-Request-Method', None)
     rh = request.headers.get('Access-Control-Request-Headers', None)
@@ -228,9 +229,16 @@ def add_header(r):
     if rh:
         r.headers['Access-Control-Allow-Headers'] = rh
     r.headers['Access-Control-Max-Age'] = 1
-    """
 
     return r
+
+"""
+@app.route(API_BASE + '/**', methods=['OPTIONS'])
+def options():
+    if request.method == 'OPTIONS':
+        return 204
+    return 204
+"""
 
 def main():
     app.run(host='0.0.0.0', port=10502, debug=False)
