@@ -36,6 +36,48 @@ class Operacion:
                 permitido = permitido or self._chequear_alcance_modelo(arbol_recurso[operacion])
         return True
 
+def _cargar_permisos():
+    import json
+    with open('permissions.json','r') as f:
+        permissions = json.loads(f.read())
+        return permissions
+
+def _generar_ejemplo():
+    import json
+    with open('permissions.json', 'w') as f:
+        permissions = {
+            'assistance-super-admin': [
+                'urn:assistance:users:read',
+                'urn:assistance:schedule:delete',
+                'urn:assistance:schedule:create',
+                'urn:assistance:logs:create',
+                'urn:assistance:logs:read',
+                'urn:assistance:devices:read',
+                'urn:assistance:justifications:read',
+                'urn:assistance:justifications:create',
+                'urn:assistance:justifications:delete',
+                'urn:assistance:justifications:update',
+                'urn:assistance:justification-date:create',
+                'urn:assistance:justification-date:delete'
+            ],
+            'default': [
+                'urn:*:*:read:self',
+                'urn:*:*:read:many:restricted',
+                'urn:assistance:users:read:self',
+                'urn:assistance:places:read:many',
+                'urn:assistance:assistance-report:read:many:restricted',
+                'urn:assistance:justifications-report:read:many:restricted',
+                'urn:assistance:general-assistance-report:read:many:restricted',
+                'urn:assistance:schedule:read:many:restricted',
+                'urn:assistance:schedule:read:self',
+                'urn:assistance:justifications:read:many:restricted',
+                'urn:assistance:justification-date:create:many:restricted',
+                'urn:assistance:justification-date:delete:many:restricted',
+                'urn:assistance:justification-date:read:self'                    
+            ]
+        }
+        rs = json.dumps(permissions)
+        f.write(rs)
 
 """
     parsea el string definido del permiso y retora un diccionario que lo define
@@ -126,45 +168,3 @@ def chequear_permisos(uid, permisos=[], lista_permisos={}):
         permitido = permitido and _chequear_sistema(p, arbol)
     return permitido
 
-def _cargar_permisos():
-    import json
-    with open('permissions.json','r') as f:
-        permissions = json.loads(f.read())
-        return permissions
-
-def _generar_ejemplo():
-    import json
-    with open('permissions.json', 'w') as f:
-        permissions = {
-            'assistance-super-admin': [
-                'urn:assistance:users:read',
-                'urn:assistance:schedule:delete',
-                'urn:assistance:schedule:create',
-                'urn:assistance:logs:create',
-                'urn:assistance:logs:read',
-                'urn:assistance:devices:read',
-                'urn:assistance:justifications:read',
-                'urn:assistance:justifications:create',
-                'urn:assistance:justifications:delete',
-                'urn:assistance:justifications:update',
-                'urn:assistance:justification-date:create',
-                'urn:assistance:justification-date:delete'
-            ],
-            'default': [
-                'urn:*:*:read:self',
-                'urn:*:*:read:many:restricted',
-                'urn:assistance:users:read:self',
-                'urn:assistance:places:read:many',
-                'urn:assistance:assistance-report:read:many:restricted',
-                'urn:assistance:justifications-report:read:many:restricted',
-                'urn:assistance:general-assistance-report:read:many:restricted',
-                'urn:assistance:schedule:read:many:restricted',
-                'urn:assistance:schedule:read:self',
-                'urn:assistance:justifications:read:many:restricted',
-                'urn:assistance:justification-date:create:many:restricted',
-                'urn:assistance:justification-date:delete:many:restricted',
-                'urn:assistance:justification-date:read:self'                    
-            ]
-        }
-        rs = json.dumps(permissions)
-        f.write(rs)
