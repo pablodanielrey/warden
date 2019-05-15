@@ -138,7 +138,7 @@ def allowed(token=None):
 @app.route(API_BASE + '/permissions', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
-def permissions(token=None):
+def get_permissions(token=None):
     if not token:
         return {
             'status':400,
@@ -185,6 +185,22 @@ def profile(token=None):
     return {
         'profile': ok
     }
+
+
+"""
+    Obtiene la lista de permisos asociados al usuario identificado por el token.
+"""
+@app.route(API_BASE + '/all_permissions', methods=['GET'])
+@rs.require_valid_token
+@jsonapi
+def all_permissions(token=None):
+    assert token is not None
+    uid = token['sub']
+    perms = []
+    if uid in permissions:
+        perms.extend(permissions[uid])
+    perms.extend(permissions['default'])
+    return perms
 
 @app.route(API_BASE + '/introspect', methods=['POST'])
 @rs.require_token_scopes(scopes=['warden'])
