@@ -163,8 +163,12 @@ def _chequear_sistema(perm, arbol_permisos):
 
 def chequear_permisos(uid, permisos=[], lista_permisos={}):
     arbol = _obtener_arbol_permisos(uid, lista_permisos)
+    resultado = []
     permitido = True
     for p in permisos:
-        permitido = permitido and _chequear_sistema(p, arbol)
-    return permitido
+        ok = _chequear_sistema(p, arbol)
+        if ok:
+            resultado.append(p)
+        permitido = permitido and ok
+    return permitido, resultado
 

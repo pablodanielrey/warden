@@ -102,6 +102,9 @@ def allowed(token=None):
 @rs.require_valid_token
 @jsonapi
 def get_permissions(token=None):
+    """
+        retorna toda la lista de permisos del usuario asociado con el token
+    """
     if not token:
         return {
             'status':400,
@@ -152,39 +155,40 @@ def profile(token=None):
     }
 
 
-"""
-    Obtiene la lista de permisos asociados al usuario identificado por el token.
-"""
-@app.route(API_BASE + '/all_permissions', methods=['GET'])
-@rs.require_valid_token
-@jsonapi
-def all_permissions(token=None):
-    assert token is not None
-    uid = token['sub']
-    perms = []
-    if uid in permissions:
-        perms.extend(permissions[uid])
-    perms.extend(permissions['default'])
-    return perms
-
-"""
-    chequea que la el usuario identificado por el token tenga los permisos pasados en el requerimineto:
-    {'permissions':[perm1, perm2, perm3]}
-"""
 @app.route(API_BASE + '/has_permissions', methods=['POST'])
 @rs.require_valid_token
 @jsonapi
 def has_permissions(token=None):
+    """
+        chequea que la el usuario identificado por el token tenga como mínimo los permisos pasados en el requerimineto:
+        el formato de la consutla es:
+        {
+            'permissions': [
+                perm1,
+                perm2,
+                perm3
+            ]
+        }
+        
+        formato de respuesta es:
+        {
+            status: number,
+            description: string,
+            result: boolean,
+            granted: string[]
+        }
+    """
     assert token is not None
     from . import permisos
     uid = token['sub']
     perms = request.json
     if 'permissions' in perms:
-        if permisos.chequear_permisos(uid, perms['permissions'], permissions):
-            return {'status':200, 'description':'ok'}
+        granted, permissions_granted = permisos.chequear_permisos(uid, perms['permissions'], permissions)
+        if granted:
+            return {'status':200, 'description':'ok', 'result':granted, 'granted':permissions_granted}
         else:
-            return {'status':403, 'description':'forbidden'}
-    return {'status':500, 'description':'Invalid'}
+            return {'status':403, 'description':'forbidden', 'result':granted, 'granted':[]}
+    return {'status':500, 'description':'Invalid', 'result':False, 'granted':[]}
 
 
 
