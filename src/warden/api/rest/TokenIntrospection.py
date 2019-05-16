@@ -80,6 +80,20 @@ class TokenIntrospection:
             return f(*args, **kwargs)
         return decorated_function
 
+    def func_require_valid_token(self):
+            '''
+                Recupera y chequea el token por validez
+                usado como función dentro de los requerimientos de flask.
+            '''
+            token = self._bearer_token(flask.request.headers)
+            if not token:
+                return 401,None
+            tk = self.introspect_token(token)
+            if not tk:
+                return 400,None
+            return 200,tk
+
+
     def _invalid_request(self):
         return self._require_auth(text='Bad Request', error='invalid_request', status=400)
 

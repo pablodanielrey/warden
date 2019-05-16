@@ -62,29 +62,33 @@ class Warden:
         esquema nuevo de permisos
         el token de consulta a warden se realiza usando el mismo token de usuario
     """
-    def get_permissions(self, token):
+    def has_permissions(self, token, permisos=[]):
+        assert token is not None
         headers = {
             'Authorization': 'Bearer {}'.format(token),
             'Accept':'application/json'
         }
-        r = requests.get(self.warden_url + '/all_permissions', verify=self.verify, allow_redirects=False, headers=headers)
+        request = {
+            'permissions': permisos
+        }
+        r = requests.post(self.warden_url + '/has_permissions', verify=self.verify, allow_redirects=False, headers=headers, json=request)
         if r.ok:
             js = r.json()
-            return js
+            return js['result']
         return None
 
-    def has_permission(self, token, perms=[]):
-        pass
+
+    def _get_request_token(self):
+        return self._bearer_token(flask.request.headers)
 
     """
         introspección del token
     """
 
-    def _require_valid_token(self):
+    def _verify_valid_token(self, token):
         '''
             Recupera y chequea el token por validez
         '''
-        token = self._bearer_token(flask.request.headers)
         if not token:
             return None
         headers = self._get_auth_headers()
@@ -99,15 +103,35 @@ class Warden:
 
         return None
 
+    def _require_valid_token(self):
+        original_token = self._get_request_token()
+        tk = self._verify_valid_token(original_token)
+        if not tk:
+            return original_token, None
+        return original_token, tk
+
     def require_valid_token(self, f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            tk = self._require_valid_token()
+            original_token, tk = self._require_valid_token()
             if not tk:
                 return self._invalid_request()
             kwargs['token'] = tk
+            #kwargs['original_token'] = original_token
             return f(*args, **kwargs)
         return decorated_function
+
+    def require_valid_token2(self, f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            original_token, tk = self._require_valid_token()
+            if not tk:
+                return self._invalid_request()
+            kwargs['token'] = tk
+            kwargs['original_token'] = original_token
+            return f(*args, **kwargs)
+        return decorated_function
+
 
     def _bearer_token(self, headers):
         if 'Authorization' in headers:

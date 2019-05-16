@@ -97,7 +97,6 @@ def find_in_roles(uid, role):
 def allowed(token=None):
     return {'allowed':False, 'description':'Not implemented'}
 
-
 @app.route(API_BASE + '/permissions', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
