@@ -12,7 +12,7 @@
 from setuptools import setup, find_packages
 
 setup(name='warden-api',
-          version='1.3.1a1',
+          version='2.0.0a1',
           description='Aplicación para manejar los perfiles de los sistemas',
           url='https://github.com/pablodanielrey/warden-api',
           author='Desarrollo DiTeSi, FCE',
