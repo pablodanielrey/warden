@@ -79,10 +79,28 @@ def _generar_ejemplo(fp):
         rs = json.dumps(permissions)
         f.write(rs)
 
+
+"""
+    retorna un dict que define el permiso para configurar dentor del arbol
+"""
+def _parsear_permiso_arbol(perm):
+    arr = perm.split(':')
+    alcance = arr[4] if len(arr) > 4 else '*'
+    modelo = arr[5] if len(arr) > 5 else '*'
+    ret = {
+        'sistema': arr[1],
+        'recurso': arr[2],
+        'operacion': arr[3],
+        'alcance': alcance,
+        'modelo': modelo
+    }
+    return ret
+
+
 """
     parsea el string definido del permiso y retora un diccionario que lo define
 """
-def _parsear_permiso(perm):
+def _parsear_permiso_cliente(perm):
     arr = perm.split(':')
     op = arr[3]
     alcance = arr[4] if len(arr) > 4 else None
@@ -114,7 +132,7 @@ def _obtener_arbol_permisos(uid, permissions):
         if indice not in permissions:
             continue
         for p in permissions[indice]:
-            perm = _parsear_permiso(p)
+            perm = _parsear_permiso_arbol(p)
 
             s = perm['sistema']
             if s not in arbol:
@@ -151,7 +169,7 @@ def _chequear_recurso(permiso, arbol_recursos):
     return False
 
 def _chequear_sistema(perm, arbol_permisos):
-    permiso = _parsear_permiso(perm)
+    permiso = _parsear_permiso_cliente(perm)
     s = permiso['sistema']
     if s in arbol_permisos:
         arbol_recursos = arbol_permisos[s]
@@ -161,11 +179,14 @@ def _chequear_sistema(perm, arbol_permisos):
         return _chequear_recurso(permiso, arbol_recursos)
     return False
 
-def chequear_permisos(uid, permisos=[], lista_permisos={}):
+def chequear_permisos(uid, permisos_a_chequear=[], lista_permisos={}):
+    """
+        chequea que todos los permisos requeridos estén permitidos para el usuario uid.
+    """
     arbol = _obtener_arbol_permisos(uid, lista_permisos)
     resultado = []
     permitido = True
-    for p in permisos:
+    for p in permisos_a_chequear:
         ok = _chequear_sistema(p, arbol)
         if ok:
             resultado.append(p)
