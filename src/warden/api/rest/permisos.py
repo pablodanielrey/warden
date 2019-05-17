@@ -132,9 +132,9 @@ def _obtener_arbol_permisos(uid, permissions):
         }
 
     """    
-    arbol = {}
     if uid not in permissions:
         return None
+    arbol = {}
     for p in permissions[uid]:
         for perm in _parsear_permiso_arbol(p):
             s = perm['sistema']
@@ -216,29 +216,32 @@ def chequear_permisos(uid, permisos_a_chequear=[], lista_permisos={}):
     """
         chequea que todos los permisos requeridos estén permitidos para el usuario uid.
     """
-    resultado = []
-    permitido = True
+    if len(permisos_a_chequear) <= 0:
+        return True, set()
+
+    resultado = set()
+    permitido_usuario = False
 
     arbol = _obtener_arbol_permisos(uid, lista_permisos)
     if arbol:
+        permitido_usuario = True
         for p in permisos_a_chequear:
             ok = _chequear_sistema(p, arbol)
             if ok:
-                resultado.append(p)
-            permitido = permitido and ok
+                resultado.add(p)
+            permitido_usuario = permitido_usuario and ok
 
-    if permitido:
-        return permitido, resultado
-        
-    permisos_faltantes = list(set(permisos_a_chequear) - set(resultado))
+    permitido_default = False
+    permisos_faltantes = set(permisos_a_chequear) - resultado
     arbol = _obtener_arbol_permisos('default', lista_permisos)
     if arbol:
-        permitido = True
+        permitido_default = True
         for p in permisos_faltantes:
             ok = _chequear_sistema(p, arbol)
             if ok:
-                resultado.append(p)
-            permitido = permitido and ok
+                resultado.add(p)
+            permitido_default = permitido_default and ok
 
+    permitido = permitido_usuario or permitido_default
     return permitido, resultado
 
