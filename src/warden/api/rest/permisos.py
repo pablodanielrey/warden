@@ -1,40 +1,46 @@
 
-class Operacion:
-    ''' 
-        tabla de jerarquía de alcances 
-        el indice es la jerarquía permitida y los valores son las equivalencias alcanzadas por el permiso.
-    '''
-    equivalencias = {
-        'self': ['self'],
-        'one': ['one','self'],
-        'sub': ['sub','self'],
-        'many': ['many','sub','one','self'],
-        'any': ['*','any','many', 'sub', 'one', 'self'],
-        '*': ['*','any','many', 'sub', 'one', 'self']
-    }
+equivalencias_alcance = {
+    'self': ['self'],
+    'one': ['one','self'],
+    'sub': ['sub','self'],
+    'many': ['many','sub','one','self'],
+    'any': ['any','many', 'sub', 'one', 'self'],
+    '*': ['any','many', 'sub', 'one', 'self']
+}
 
+equivalencias_operaciones = {
+    'delete': ['delete'],
+    'update': ['update'],
+    'read': ['read'],
+    'create': ['create','read','update'],
+    '*': ['create','read','update','delete']
+}
+
+
+class OperacionCliente:
+    
     def __init__(self, o=None, a=None, m=None):
-        self.op = o if o else '*'
-        self.alcance = a if a else '*'
-        self.modelo = m if m else '*'
-
-    ''' chequea si la operación tiene un alcance y modelo permitidos '''
-    def _chequear_alcance_modelo(self, arbol_operacion):
-        for alcance_permitido in arbol_operacion:
-            if self.alcance in self.equivalencias[alcance_permitido]:
-                if arbol_operacion[alcance_permitido] == self.modelo:
-                    return True
-                elif arbol_operacion[alcance_permitido] == '*':
-                    return True
-        return False
+        self.op = [o] if o and o != '*' else equivalencias_operaciones['*']
+        self.alcance = [a] if a and a != '*' else equivalencias_alcance['*']
+        self.modelo = m if m else ''
 
     ''' chequea si la operación esta permitida dentro del recurso '''
     def chequear_operacion(self, arbol_recurso):
-        permitido = False
-        for operacion in arbol_recurso:
-            if self.op == operacion or operacion == '*':
-                permitido = permitido or self._chequear_alcance_modelo(arbol_recurso[operacion])
+        permitido = True
+        for _op in self.op:
+            if _op not in arbol_recurso:
+                permitido = False
+                break
+            arbol_alcances = arbol_recurso[_op]
+            for _al in self.alcance:
+                if _al not in arbol_alcances:
+                    permitido = False
+                    break
+                if arbol_alcances[_al] != self.modelo:
+                    permitido = False
+                    break
         return permitido
+                
 
 def cargar_permisos(fp):
     import json
@@ -81,39 +87,35 @@ def _generar_ejemplo(fp):
 
 
 """
-    retorna un dict que define el permiso para configurar dentor del arbol
+    retorna una lista de dict que definen los permisos para configurar dentro del arbol, dado un permiso en string.
 """
 def _parsear_permiso_arbol(perm):
     arr = perm.split(':')
+
+    sistema = arr[1]
+    recurso = arr[2]
+    operacion = arr[3] if len(arr) > 3 else '*'
     alcance = arr[4] if len(arr) > 4 else '*'
-    modelo = arr[5] if len(arr) > 5 else '*'
-    ret = {
-        'sistema': arr[1],
-        'recurso': arr[2],
-        'operacion': arr[3],
-        'alcance': alcance,
-        'modelo': modelo
-    }
-    return ret
-
-
-"""
-    parsea el string definido del permiso y retora un diccionario que lo define
-    el permiso consultado por el cliente tiene que ser específico y no puede tener *
-    los * se generan solo para alcance y modelo en el caso de que no sean especificados (esos modificadores si son opcionales)
-"""
-def _parsear_permiso_cliente(perm):
-    arr = perm.split(':')
-    assert len(arr) > 3
-    op = arr[3]
-    alcance = arr[4] if len(arr) > 4 else None
-    modelo = arr[5] if len(arr) > 5 else None
-    ret = {
-        'sistema': arr[1],
-        'recurso': arr[2],
-        'operacion': Operacion(op, alcance, modelo)
-    }
-    return ret
+    modelo = arr[5] if len(arr) > 5 else ''
+    
+    permisos = []
+    for _op in equivalencias_operaciones[operacion]:
+        for _al in equivalencias_alcance[alcance]:
+            op = {
+                'sistema': sistema,
+                'recurso': recurso,
+                'operacion': _op,
+                'alcance': _al,
+                'modelo': ''
+            }
+            """
+                la restricción del modelo solo se aplica al alcance específico asociado al permiso indicado del cliente 
+                no se replica a todos los alcances equivalentes
+            """
+            if _al == alcance:
+                op['modelo'] = modelo
+            permisos.append(op)
+    return permisos
 
 def _obtener_arbol_permisos(uid, permissions):
     """
@@ -131,12 +133,10 @@ def _obtener_arbol_permisos(uid, permissions):
 
     """    
     arbol = {}
-    for indice in [uid, 'default']:
-        if indice not in permissions:
-            continue
-        for p in permissions[indice]:
-            perm = _parsear_permiso_arbol(p)
-
+    if uid not in permissions:
+        return None
+    for p in permissions[uid]:
+        for perm in _parsear_permiso_arbol(p):
             s = perm['sistema']
             if s not in arbol:
                 arbol[s] = {}
@@ -154,8 +154,33 @@ def _obtener_arbol_permisos(uid, permissions):
                 arbol[s][r][o][a] = {}
             
             m = perm['modelo']
-            arbol[s][r][o][a] = m 
+            arbol[s][r][o][a] = m
     return arbol
+
+
+"""
+    parsea el string definido del permiso y retora un diccionario que lo define
+    el permiso consultado por el cliente tiene que ser específico y no puede tener *
+    los * se generan solo para alcance y modelo en el caso de que no sean especificados (esos modificadores si son opcionales)
+"""
+def _parsear_permiso_cliente(perm):
+    arr = perm.split(':')
+    sistema = arr[1] if len(arr) > 1 else '*'
+    recurso = arr[2] if len(arr) > 2 else '*'
+
+    operacion = arr[3] if len(arr) > 3 else None
+    alcance = arr[4] if len(arr) > 4 else None
+    modelo = arr[5] if len(arr) > 5 else None
+    op = OperacionCliente(operacion, alcance, modelo)
+
+    ret = {
+        'sistema': sistema,
+        'recurso': recurso,
+        'operacion': op
+    }
+    return ret
+
+
 
 def _chequear_operacion(permiso, arbol_operaciones):
     op = permiso['operacion']
@@ -191,13 +216,29 @@ def chequear_permisos(uid, permisos_a_chequear=[], lista_permisos={}):
     """
         chequea que todos los permisos requeridos estén permitidos para el usuario uid.
     """
-    arbol = _obtener_arbol_permisos(uid, lista_permisos)
     resultado = []
     permitido = True
-    for p in permisos_a_chequear:
-        ok = _chequear_sistema(p, arbol)
-        if ok:
-            resultado.append(p)
-        permitido = permitido and ok
+
+    arbol = _obtener_arbol_permisos(uid, lista_permisos)
+    if arbol:
+        for p in permisos_a_chequear:
+            ok = _chequear_sistema(p, arbol)
+            if ok:
+                resultado.append(p)
+            permitido = permitido and ok
+
+    if permitido:
+        return permitido, resultado
+        
+    permisos_faltantes = list(set(permisos_a_chequear) - set(resultado))
+    arbol = _obtener_arbol_permisos('default', lista_permisos)
+    if arbol:
+        permitido = True
+        for p in permisos_faltantes:
+            ok = _chequear_sistema(p, arbol)
+            if ok:
+                resultado.append(p)
+            permitido = permitido and ok
+
     return permitido, resultado
 
