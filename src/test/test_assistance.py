@@ -1,7 +1,6 @@
 
 import pytest
 
-@pytest.fixture
 def permisos_perfiles():
     perfiles = {
         "assistance-super-admin": [
@@ -44,7 +43,6 @@ def permisos_perfiles():
     }
     return perfiles
 
-@pytest.fixture
 def usuarios_perfiles():
     usuarios = {
         "assistance-super-admin": [
@@ -83,3 +81,97 @@ def usuarios_perfiles():
         ]
     }
     return usuarios
+
+@pytest.fixture
+def permisos():
+    """
+        genero la estructura de permisos para el sistema.
+        la genero a partir de los roles que ya se tienen.
+    """
+    perm = permisos_perfiles()
+    retorno = {
+        'default': perm['default']
+    }
+
+    usuarios = usuarios_perfiles()
+    for perfil in usuarios:
+        lista_permisos = perm[perfil]
+        for usuario in usuarios[perfil]:
+            if usuario['id'] not in retorno:
+                ''' si exsite entonces ya le asigne permisos de un perfil que tiene precedencia de acuerod a la lista de perfiles por ususario '''
+                retorno[usuario['id']] = lista_permisos
+
+    return retorno
+
+
+def test_acceso_de_admin(permisos):
+    import warden.api.rest.permisos as p
+
+    ''' chequeo con un usuario super admin de asistencia '''
+
+    assert p.chequear_permisos('89d88b81-fbc0-48fa-badb-d32854d3d93a', [
+            "urn:assistance:users:read",
+            "urn:assistance:schedule:delete",
+            "urn:assistance:schedule:create",
+            "urn:assistance:logs:create",
+            "urn:assistance:logs:read",
+            "urn:assistance:devices:read",
+            "urn:assistance:justifications:read",
+            "urn:assistance:justifications:create",
+            "urn:assistance:justifications:delete",
+            "urn:assistance:justifications:update",
+            "urn:assistance:justification-date:create",
+            "urn:assistance:justification-date:delete"
+        ], permisos) == (True, {
+            "urn:assistance:users:read",
+            "urn:assistance:schedule:delete",
+            "urn:assistance:schedule:create",
+            "urn:assistance:logs:create",
+            "urn:assistance:logs:read",
+            "urn:assistance:devices:read",
+            "urn:assistance:justifications:read",
+            "urn:assistance:justifications:create",
+            "urn:assistance:justifications:delete",
+            "urn:assistance:justifications:update",
+            "urn:assistance:justification-date:create",
+            "urn:assistance:justification-date:delete"
+        })
+
+    assert p.chequear_permisos('89d88b81-fbc0-48fa-badb-d32854d3d93a', [
+            "urn:assistance:users:read",
+            "urn:assistance:users:read:self",
+            "urn:assistance:users:read:any",
+            "urn:assistance:users:read:many",
+            "urn:assistance:users:read:one",
+            "urn:assistance:users:read:sub"
+        ], permisos) == (True, {
+            "urn:assistance:users:read",
+            "urn:assistance:users:read:self",
+            "urn:assistance:users:read:any",
+            "urn:assistance:users:read:many",
+            "urn:assistance:users:read:one",
+            "urn:assistance:users:read:sub"
+        })
+
+
+    assert p.chequear_permisos('89d88b81-fbc0-48fa-badb-d32854d3d93a', [
+            "urn:assistance:general-assistance-report:read:many:restricted"
+        ], permisos) == (True, {
+            "urn:assistance:general-assistance-report:read:many:restricted"
+        })
+
+    assert p.chequear_permisos('89d88b81-fbc0-48fa-badb-d32854d3d93a', [
+            "urn:assistance:general-assistance-report:read:many:algo-inexistente"
+        ], permisos) == (False, set())
+
+    assert p.chequear_permisos('89d88b81-fbc0-48fa-badb-d32854d3d93a', [
+            "urn:assistance:general-assistance-report:read:many",
+            "urn:assistance:general-assistance-report:read:many:restricted",
+            "urn:assistance:general-assistance-report:read:many:algo-inexistente"
+        ], permisos) == (False, {
+            "urn:assistance:general-assistance-report:read:many:restricted"
+        })
+
+    assert p.chequear_permisos('89d88b81-fbc0-48fa-badb-d32854d3d93a', [
+            "urn:assistance:general-assistance-report:read"
+        ], permisos) == (False, set())
