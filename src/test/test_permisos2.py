@@ -19,7 +19,7 @@
 
 def comodines():
     """
-    Test comodines
+    #TODO Test comodines
     """
     import warden.api.rest.permisos as p
     permisos = {
@@ -77,7 +77,7 @@ def comodines():
 
 def sistemas():
     """
-    Tests Sistemas
+    #TODO Tests Sistemas
     """
     import warden.api.rest.permisos as p
     permisos = {
@@ -141,6 +141,9 @@ def sistemas():
                                     ]))  
 
 def recursos():
+    """
+    #TODO 
+    # """
     import warden.api.rest.permisos as p
     permisos = {
         '1': [
@@ -176,7 +179,7 @@ def recursos():
 
 def permisos():
     """
-    Test permisos
+    #TODO Test permisos
     """
     import warden.api.rest.permisos as p
     permisos = {
@@ -219,6 +222,9 @@ def permisos():
     assert p.chequear_permisos('1', ['urn:sistema:recurso:delete:many:algo'], permisos) == (False,set())
 
 def scopes():
+     """
+    #TODO 
+    # """
     import warden.api.rest.permisos as p
     permisos = {
         '1': [
