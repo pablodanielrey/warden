@@ -1,21 +1,22 @@
- """
-        comodines:
-            * = cualquiera
-        permisos disponibles:
-            delete (eliminar)
-            read (lectura) 
-            update (actualización) 
-            create (creación)
-        scopes:
-            any (es el por defecto) = *
-            self (recurso propio)
-            one (dentro de la misma unidad organizativa)
-            sub (sub unidades organizatibas)
-            many (sub + one)
-            
-        restriciones:        
-            restricted (restringido por el modelo del sistema)
-    """
+
+"""
+    comodines:
+        * = cualquiera
+    permisos disponibles:
+        delete (eliminar)
+        read (lectura) 
+        update (actualización) 
+        create (creación)
+    scopes:
+        any (es el por defecto) = *
+        self (recurso propio)
+        one (dentro de la misma unidad organizativa)
+        sub (sub unidades organizatibas)
+        many (sub + one)
+        
+    restriciones:        
+        restricted (restringido por el modelo del sistema)
+"""
 
 def comodines():
     """
@@ -44,7 +45,7 @@ def comodines():
             'urn:sistema:recurso:update:many:restricted'
         ]
     }
-    assert p.chequear_permisos('1', ['urn:sistema:recurso:*'], permisos) == (True,set(['urn:sistema:recurso:*']))
+    assert p.chequear_permisos('1', ['urn:sistema:recurso'], permisos) == (True,set(['urn:sistema:recurso']))
     assert p.chequear_permisos('1', ['urn:sistema:recurso:create'], permisos) == (True,set(['urn:sistema:recurso:create']))
     assert p.chequear_permisos('1', ['urn:sistema:recurso'], permisos) == (True,set(['urn:sistema:recurso']))
     assert p.chequear_permisos('1', ['urn:sistema:recurso:update'], permisos) == (True,set(['urn:sistema:recurso:update']))
@@ -75,7 +76,7 @@ def comodines():
                                         'urn:sistema:recurso:delete:many:restricted:asd'
                                     ]))                                       
 
-def sistemas():
+def test_sistemas():
     """
     #TODO Tests Sistemas
     """
@@ -221,10 +222,10 @@ def permisos():
     assert p.chequear_permisos('1', ['urn:sistema:recurso:delete:many:restricted'], permisos) == (False,set())
     assert p.chequear_permisos('1', ['urn:sistema:recurso:delete:many:algo'], permisos) == (False,set())
 
-def scopes():
-     """
+def test_scopes():
+    """
     #TODO 
-    # """
+    """
     import warden.api.rest.permisos as p
     permisos = {
         '1': [
