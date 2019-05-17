@@ -13,8 +13,8 @@ class Operacion:
         '*': ['*','any','many', 'sub', 'one', 'self']
     }
 
-    def __init__(self, o, a=None, m=None):
-        self.op = o
+    def __init__(self, o=None, a=None, m=None):
+        self.op = o if o else '*'
         self.alcance = a if a else '*'
         self.modelo = m if m else '*'
 
@@ -34,7 +34,7 @@ class Operacion:
         for operacion in arbol_recurso:
             if self.op == operacion or operacion == '*':
                 permitido = permitido or self._chequear_alcance_modelo(arbol_recurso[operacion])
-        return True
+        return permitido
 
 def cargar_permisos(fp):
     import json
@@ -99,9 +99,12 @@ def _parsear_permiso_arbol(perm):
 
 """
     parsea el string definido del permiso y retora un diccionario que lo define
+    el permiso consultado por el cliente tiene que ser específico y no puede tener *
+    los * se generan solo para alcance y modelo en el caso de que no sean especificados (esos modificadores si son opcionales)
 """
 def _parsear_permiso_cliente(perm):
     arr = perm.split(':')
+    assert len(arr) > 3
     op = arr[3]
     alcance = arr[4] if len(arr) > 4 else None
     modelo = arr[5] if len(arr) > 5 else None
@@ -159,25 +162,30 @@ def _chequear_operacion(permiso, arbol_operaciones):
     return op.chequear_operacion(arbol_operaciones)
 
 def _chequear_recurso(permiso, arbol_recursos):
+    retorno = False
     r = permiso['recurso']
     if r in arbol_recursos:
         arbol_operaciones = arbol_recursos[r]
-        return _chequear_operacion(permiso, arbol_operaciones)
-    elif '*' in arbol_recursos:
+        retorno = _chequear_operacion(permiso, arbol_operaciones)
+    if not retorno and '*' in arbol_recursos:
         arbol_operaciones = arbol_recursos['*']
-        return _chequear_operacion(permiso, arbol_operaciones)
-    return False
+        retorno = _chequear_operacion(permiso, arbol_operaciones)
+    return retorno
 
 def _chequear_sistema(perm, arbol_permisos):
-    permiso = _parsear_permiso_cliente(perm)
-    s = permiso['sistema']
-    if s in arbol_permisos:
-        arbol_recursos = arbol_permisos[s]
-        return _chequear_recurso(permiso, arbol_recursos)
-    elif '*' in arbol_permisos:
-        arbol_recursos = arbol_permisos['*']
-        return _chequear_recurso(permiso, arbol_recursos)
-    return False
+    try:
+        retorno = False
+        permiso = _parsear_permiso_cliente(perm)
+        s = permiso['sistema']
+        if s in arbol_permisos:
+            arbol_recursos = arbol_permisos[s]
+            retorno = _chequear_recurso(permiso, arbol_recursos)
+        if not retorno and '*' in arbol_permisos:
+            arbol_recursos = arbol_permisos['*']
+            retorno = _chequear_recurso(permiso, arbol_recursos)
+        return retorno
+    except AssertionError:
+        return False
 
 def chequear_permisos(uid, permisos_a_chequear=[], lista_permisos={}):
     """
