@@ -184,7 +184,7 @@ def has_permissions(token=None):
     if 'permissions' in perms:
         granted, permissions_granted = permisos.chequear_permisos(uid, perms['permissions'], permissions)
         if granted:
-            return {'status':200, 'description':'ok', 'result':granted, 'granted':permissions_granted}
+            return {'status':200, 'description':'ok', 'result':granted, 'granted':list(permissions_granted)}
         else:
             return {'status':403, 'description':'forbidden', 'result':granted, 'granted':[]}
     return {'status':500, 'description':'Invalid', 'result':False, 'granted':[]}
