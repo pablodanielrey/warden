@@ -98,6 +98,9 @@ def _parsear_permiso_arbol(perm):
     alcance = arr[4] if len(arr) > 4 else '*'
     modelo = arr[5] if len(arr) > 5 else ''
     
+    if alcance not in equivalencias_alcance:
+        raise Exception(f'formato de permiso {perm} incorrecto')
+
     permisos = []
     for _op in equivalencias_operaciones[operacion]:
         for _al in equivalencias_alcance[alcance]:
@@ -137,6 +140,8 @@ def _obtener_arbol_permisos(uid, permissions):
     arbol = {}
     for p in permissions[uid]:
         for perm in _parsear_permiso_arbol(p):
+            m = perm['modelo']
+
             s = perm['sistema']
             if s not in arbol:
                 arbol[s] = {}
@@ -146,15 +151,21 @@ def _obtener_arbol_permisos(uid, permissions):
                 arbol[s][r] = {}
 
             o = perm['operacion']
-            if o not in arbol[s][r]:
-                arbol[s][r][o] = {}
+            if o not in equivalencias_operaciones:
+                raise Exception(f'formato incorrecto de {p}')
+            
+            for op in equivalencias_operaciones[o]:
+                if op not in arbol[s][r]:
+                    arbol[s][r][op] = {}
 
             a = perm['alcance']
-            if a not in arbol[s][r][o]:
-                arbol[s][r][o][a] = {}
+            if a not in equivalencias_alcance:
+                raise Exception(f'formato incorrecto de {p}')
             
-            m = perm['modelo']
-            arbol[s][r][o][a] = m
+            for al in equivalencias_alcance[a]:
+                if al not in arbol[s][r][o]:
+                    arbol[s][r][o][al] = m
+            
     return arbol
 
 

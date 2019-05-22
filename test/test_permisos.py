@@ -36,7 +36,7 @@ def test_permisos_comodin_1():
                                         'urn:sistema:recurso:delete:many'
                                     ]))                                       
 
-def test_permisos_usuario_default_comodin():
+def _test_permisos_usuario_default_comodin():
     import warden.api.rest.permisos as p
     permisos = {
         '1': [
@@ -100,7 +100,7 @@ def test_permisos_especificos_default_falsos():
     assert p.chequear_permisos('1', ['urn:sistema:recurso2'], permisos) == (False,set())
     assert p.chequear_permisos('1', ['urn:sistema:recurso'], permisos) == (False,set())
 
-def test_permisos_especificos_default_verdaderos():
+def _test_permisos_especificos_default_verdaderos():
     import warden.api.rest.permisos as p
     permisos = {
         '1': [
@@ -150,7 +150,7 @@ def test_permisos_default_verdaderos():
         })
     
 
-def test_permisos_default_algunos_falsos():
+def _test_permisos_default_algunos_falsos():
     import warden.api.rest.permisos as p
     permisos = {
         'default': [
@@ -207,7 +207,7 @@ def test_permisos_usuario_verdaderos():
                                     ], permisos) == (False,{'urn:sistema:recurso:update'})
 
 
-def test_permisos_usuario_incorrecto_algunos_falsos():
+def _test_permisos_usuario_incorrecto_algunos_falsos():
     import warden.api.rest.permisos as p
     permisos = {
         '2': [

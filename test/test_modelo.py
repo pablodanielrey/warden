@@ -1,4 +1,3 @@
-
 import pytest
 
 @pytest.fixture
@@ -71,8 +70,74 @@ def permisos_recurso_solo_operacion():
     return permisos
 
 
-def test_operaciones_recurso(permisos_recurso_completo):
-    """
+def test_miguel():
+    p = {
+        'default': {
+            'urn:sistema:recurso',
+            'urn:sistema:recurso:delete:any:restricted'
+        }
+    }
+    import warden.api.rest.permisos as perm
+
+    assert perm.chequear_permisos('1', [
+        'urn:sistema:recurso:create',
+        'urn:sistema:recurso:delete:any:restricted'
+    ], p) == (True, {
+        'urn:sistema:recurso:create',
+        'urn:sistema:recurso:delete:any:restricted'
+    })
+
+    assert perm.chequear_permisos('1', [
+        'urn:sistema:recurso',
+        'urn:sistema:recurso:create',
+        'urn:sistema:recurso:update',
+        'urn:sistema:recurso:read',
+        'urn:sistema:recurso:delete:any:restricted'
+    ], p) == (False, {
+        'urn:sistema:recurso:create',
+        'urn:sistema:recurso:update',
+        'urn:sistema:recurso:read',
+        'urn:sistema:recurso:delete:any:restricted'
+    })
+
+    p = {
+        '1': {
+            'urn:sistema:recurso'
+        },
+        'default': {
+            'urn:sistema:recurso',
+            'urn:sistema:recurso:delete:any:restricted'
+        }
+    }
+    import warden.api.rest.permisos as perm
+
+    assert perm.chequear_permisos('1', [
+        'urn:sistema:recurso:create',
+        'urn:sistema:recurso:delete:any:restricted'
+    ], p) == (True, {
+        'urn:sistema:recurso:create',
+        'urn:sistema:recurso:delete:any:restricted'
+    })
+
+    assert perm.chequear_permisos('1', [
+        'urn:sistema:recurso',
+        'urn:sistema:recurso:create',
+        'urn:sistema:recurso:update',
+        'urn:sistema:recurso:read',
+        'urn:sistema:recurso:delete'
+    ], p) == (True, {
+        'urn:sistema:recurso',
+        'urn:sistema:recurso:create',
+        'urn:sistema:recurso:update',
+        'urn:sistema:recurso:read',
+        'urn:sistema:recurso:delete'
+    })
+
+
+
+
+def _test_operaciones_recurso(permisos_recurso_completo):
+    '''
         Las operaciones permitidas sobre los recursos son:
         udpate, delete, create, read
 
@@ -112,18 +177,17 @@ def test_operaciones_recurso(permisos_recurso_completo):
         }
 
         todos los demas que no sean 1 tienen el read:many:restricted, el caso del 1 tiene read:many
-    """
+    '''
 
     import warden.api.rest.permisos as perm
 
-    """
+    '''
         Se asignan todos los permisos a un recurso en particular.
         Usado de esta forma no se aplican restricciones de modelo al alcance del recurso.
         Las restricciones de modelo solo se aplican explícitamente.
-    """
+    '''
 
     for p in permisos_recurso_completo:
-
         ''' chequeo las operaciones '''
         assert perm.chequear_permisos('1',['urn:sistema:recurso'], p) == (True,{'urn:sistema:recurso'})
         assert perm.chequear_permisos('1',[
@@ -183,7 +247,7 @@ def test_operaciones_recurso(permisos_recurso_completo):
         assert perm.chequear_permisos('1', ['urn:sistema'], p) == (False, set())
         assert perm.chequear_permisos('1', ['urn'], p) == (False, set())
         
-def test_operacion_recurso(permisos_recurso_solo_operacion):
+def _test_operacion_recurso(permisos_recurso_solo_operacion):
     """
         testea que solo esté permitido una operación en el recurso, teneindo en cuenta distintos casos de usuarios y los scopes de tales operaciones.
     """

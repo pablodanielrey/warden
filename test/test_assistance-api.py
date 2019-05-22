@@ -55,7 +55,7 @@ permisos = {
     }
 
 
-def test_usuarios_search():
+def _test_usuarios_search():
     import warden.api.rest.permisos as p
 
     ''' Comprobacion de permisos de la api usuarios_search
@@ -123,7 +123,7 @@ def test_usuarios_search():
             "urn:assistance:users:read:many:restricted",
         })
 
-def test_usuarios():
+def _test_usuarios():
     import warden.api.rest.permisos as p
 
     ''' Comprobacion de permisos de la api usuarios 
@@ -219,7 +219,7 @@ def test_usuarios():
             "urn:assistance:users:read:self"
         })
 
-def test_lugares():
+def _test_lugares():
     import warden.api.rest.permisos as p
 
     ''' Comprobacion de permisos de la api lugares 
@@ -283,7 +283,7 @@ def test_lugares():
             "urn:assistance:places:read:many",
         ], permisos) == (False, set())
 
-def test_perfil():
+def _test_perfil():
     ''' Comprobacion de permisos de la api perfil 
     Permisos a chequear en el metodo:
     'urn:assistance:users:read'

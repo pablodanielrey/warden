@@ -76,7 +76,7 @@ def comodines():
                                         'urn:sistema:recurso:delete:many:restricted:asd'
                                     ]))                                       
 
-def test_sistemas():
+def _test_sistemas():
     """
     #TODO Tests Sistemas
     """
