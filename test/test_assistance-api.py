@@ -41,6 +41,7 @@ permisos = {
         ],
         "5": [
             "urn:assistance:users:read:self",
+            "urn:assistance:users:read:many:restricted",
             "urn:assistance:places:read:many",
             "urn:assistance:assistance-report:read:many:restricted",
             "urn:assistance:justifications-report:read:many:restricted",
@@ -50,12 +51,12 @@ permisos = {
             "urn:assistance:justifications:read:many:restricted",
             "urn:assistance:justification-date:create:many:restricted",
             "urn:assistance:justification-date:delete:many:restricted",
-            "urn:assistance:justification-date:read:self"
+            "urn:assistance:justification-date:read:self"            
         ]
     }
 
 
-def _test_usuarios_search():
+def test_usuarios_search():
     import warden.api.rest.permisos as p
 
     ''' Comprobacion de permisos de la api usuarios_search
@@ -65,63 +66,24 @@ def _test_usuarios_search():
     '''
     
     ''' AssistanceSuperAdmin ''' 
-    assert p.chequear_permisos('1', [
-            "urn:assistance:users:read",
-        ], permisos) == (True, {
-            "urn:assistance:users:read"
-        })
-
-    assert p.chequear_permisos('1', [
-            "urn:assistance:users:read:many:restricted",
-        ], permisos) == (False, {
-            "urn:assistance:users:read"
-        })        
-
+    assert p.chequear_permisos('1', ["urn:assistance:users:read"], permisos) == (True, {"urn:assistance:users:read"})
+    assert p.chequear_permisos('1', ["urn:assistance:users:read:many:restricted"], permisos) == (False, set())        
+    
     ''' AssistanceAdmin ''' 
-    assert p.chequear_permisos('2', [
-            "urn:assistance:users:read",
-        ], permisos) == (True, {
-            "urn:assistance:users:read",
-        })
-    assert p.chequear_permisos('2', [
-            "urn:assistance:users:read:many:restricted",
-        ], permisos) == (False, {
-            "urn:assistance:users:read",
-        })
+    assert p.chequear_permisos('2', ["urn:assistance:users:read"], permisos) == (True, {"urn:assistance:users:read",})
+    assert p.chequear_permisos('2', ["urn:assistance:users:read:many:restricted"], permisos) == (False, set())
 
     ''' AssistanceOperator ''' 
-    assert p.chequear_permisos('3', [
-            "urn:assistance:users:read",
-        ], permisos) == (True, {
-            "urn:assistance:users:read",
-        })
-    assert p.chequear_permisos('3', [
-            "urn:assistance:users:read:many:restricted",
-        ], permisos) == (False, {
-            "urn:assistance:users:read",
-        })
+    assert p.chequear_permisos('3', ["urn:assistance:users:read"], permisos) == (True, {"urn:assistance:users:read"})
+    assert p.chequear_permisos('3', ["urn:assistance:users:read:many:restricted"], permisos) == (False, set())
+    
     ''' AssistanceUser '''
-    assert p.chequear_permisos('4', [
-            "urn:assistance:users:read",
-        ], permisos) == (True, {
-            "urn:assistance:users:read",
-        })
-    assert p.chequear_permisos('4', [
-            "urn:assistance:users:read:many:restricted",
-        ], permisos) == (False, {
-            "urn:assistance:users:read",
-        })
+    assert p.chequear_permisos('4', ["urn:assistance:users:read"], permisos) == (True, {"urn:assistance:users:read"})
+    assert p.chequear_permisos('4', ["urn:assistance:users:read:many:restricted"], permisos) == (False, set())
+
     ''' Default '''
-    assert p.chequear_permisos('5', [
-            "urn:assistance:users:read",
-        ], permisos) == (False, {
-            "urn:assistance:users:read:many:restricted",
-        })
-    assert p.chequear_permisos('5', [
-            "urn:assistance:users:read:many:restricted",
-        ], permisos) == (True, {
-            "urn:assistance:users:read:many:restricted",
-        })
+    assert p.chequear_permisos('5', ["urn:assistance:users:read"], permisos) == (False, set())
+    assert p.chequear_permisos('5', ["urn:assistance:users:read:many:restricted"], permisos) == (True, {"urn:assistance:users:read:many:restricted"})
 
 def _test_usuarios():
     import warden.api.rest.permisos as p
