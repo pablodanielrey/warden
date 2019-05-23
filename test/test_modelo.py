@@ -209,16 +209,21 @@ def test_operacion_recurso(permisos_recurso_solo_operacion):
             assert perm.chequear_permisos('1',[f'urn:sistema:recurso'], p) == (False, set())
 
             for _op in ['create','update','delete','read']:
+                usuarios = ['1']
+                if es_default:
+                    usuarios.extend(['2','3','4'])
 
                 ''' la operación permitida por los permisos es cuando op == _op '''
                 if _op in equivalencias_operaciones[op]:
-                    assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{_op}'], p) == (True, {f'urn:sistema:recurso:{_op}'})
-                    for alc in ['sub','one','self','many','any']:
-                        assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{_op}:{alc}'], p) == (True, {f'urn:sistema:recurso:{_op}:{alc}'})
-                        assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{_op}:{alc}:restricted'], p) == (False, set())
+                    for usuario in usuarios:
+                        assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{_op}'], p) == (True, {f'urn:sistema:recurso:{_op}'})
+                        for alc in ['sub','one','self','many','any']:
+                            assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{_op}:{alc}'], p) == (True, {f'urn:sistema:recurso:{_op}:{alc}'})
+                            assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{_op}:{alc}:restricted'], p) == (False, set())
                 else:
-                    assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{_op}'], p) == (False,set())
-                    for alc in ['sub','one','self','many','any']:
-                        assert perm.chequear_permisos('1',[f'urn:sistema:recurso:_{op}:{alc}'], p) == (False, set())
-                        assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{_op}:{alc}:restricted'], p) == (False, set())
+                    for usuario in usuarios:
+                        assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{_op}'], p) == (False,set())
+                        for alc in ['sub','one','self','many','any']:
+                            assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:_{op}:{alc}'], p) == (False, set())
+                            assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{_op}:{alc}:restricted'], p) == (False, set())
 
