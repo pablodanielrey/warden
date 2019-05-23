@@ -10,6 +10,12 @@ TEST ---> Se van a chequear permisos obtenidos al consultar UIDS ficticias:
         5 == Default
 """
 
+sistemas = ['assistance']
+recursos = ['users','places','assistance-report','schedule','justifications','justifications-date','devices','logs','*']
+operaciones = ['create','read','update','delete','*']
+alcances = ['any','many', 'sub', 'one', 'self','*']
+modelos = ['','restricted','*']
+
 permisos = {
         "sadm": [
             "urn:assistance:*"
@@ -78,11 +84,7 @@ def test_default():
     "urn:assistance:justification-date:delete:many:restricted",
     "urn:assistance:justification-date:read:self"  
 
-
-
     OJO CON EL ORDEN DE ASIGNACION DE PERMISOS PARA UN USUARIO
-
-
     '''
     
     ''' Accesos permitidos ''' 
@@ -90,7 +92,6 @@ def test_default():
                                             "urn:assistance:users:read:many:restricted",
                                             "urn:assistance:users:read:self",
                                             "urn:assistance:places:read:many",
-                                            "urn:assistance:users:read:self",
                                             "urn:assistance:assistance-report:read:many:restricted",
                                             "urn:assistance:justifications-report:read:many:restricted",
                                             "urn:assistance:general-assistance-report:read:many:restricted",
@@ -104,7 +105,6 @@ def test_default():
                                                 "urn:assistance:users:read:many:restricted",
                                                 "urn:assistance:users:read:self",
                                                 "urn:assistance:places:read:many",
-                                                "urn:assistance:users:read:self",
                                                 "urn:assistance:assistance-report:read:many:restricted",
                                                 "urn:assistance:justifications-report:read:many:restricted",
                                                 "urn:assistance:general-assistance-report:read:many:restricted",
@@ -118,12 +118,91 @@ def test_default():
     
     ''' Permisos denegados '''
     #TODO Realziar un for de las combinaciones posibles de permisos que deberian ser falsos
+    """
     sistemas = ['assistance']
     recursos = ['users','places','assistance-report','schedule','justifications','justifications-date','devices','logs','*']
     operaciones = ['create','read','update','delete','*']
     alcances = ['any','many', 'sub', 'one', 'self','*']
+    modelo = ['*','restricted']
+    """
+    #Recursos denegados para el perfil determinado
+    recursosDenegados = ['logs','devices','*']
+    operacionesDenegadas = ['update','*']
+    alcancesDenegados = ['any','one','sub','*']
+
+    for s in sistemas:
+        for r in recursosDenegados:
+            for o in operacionesDenegadas:
+                for a in alcancesDenegados:
+                    assert p.chequear_permisos('default', [f"urn:{s}:{r}:{o}:{a}"], permisos) == (False, set())
+
+    #Combinaciones que deberian ser denegadas para el perfil determinado
+    denegados = {
+        'users': {
+            'read': {
+                'any' : ['*','restricted',''],
+                'many': ['*',''],
+                'sub' : ['*','restricted',''],
+                'one' : ['*','restricted',''],
+                'self': ['*','restricted'],
+                '*'   : ['*','restricted','']
+            },
+            'delete': {
+                'any' : ['*','restricted',''],
+                'many': ['*','restricted',''],
+                'sub' : ['*','restricted',''],
+                'one' : ['*','restricted',''],
+                'self': ['*','restricted',''],
+                '*'   : ['*','restricted','']
+            }
+        }
+    }
+
+
+arbolPermisosDenegados = {}
+
+for c in permisos['default']:
+    parseado = c.split(':')
+    urn      = parseado[0] if len(parseado) >= 1 else None
+    sistema  = parseado[1] if len(parseado) >= 2 else None
+    recurso  = parseado[2] if len(parseado) >= 3 else None
+    operacion= parseado[3] if len(parseado) >= 4 else None
+    alcance  = parseado[4] if len(parseado) >= 5 else None
+    modelo   = parseado[5] if len(parseado) == 6 else None
     
+    print(sistema, recurso, operacion,alcance,modelo)
+    
+    if sistema in arbolPermisosDenegados.keys():
+        if recurso in arbolPermisosDenegados[sistema].keys():
+            if operacion in arbolPermisosDenegados[sistema][recurso].keys():
+                if alcance in arbolPermisosDenegados[sistema][recurso][operacion].keys():
+                    if modelo in arbolPermisosDenegados[sistema][recurso][operacion][alcance].keys():
 
-    assert p.chequear_permisos('default', ["urn:assistance:users:read"], permisos) == (False, set())
-    assert p.chequear_permisos('default', ["urn:assistance:users:read:many:restricted"], permisos) == (True, {"urn:assistance:users:read:many:restricted"})
+    else:
+        arbolPermisosDenegados[sistema] = {}
+        if recurso:
+            arbolPermisosDenegados[sistema][recurso] = {}
+            if operacion:
+                arbolPermisosDenegados[sistema][recurso][operacion] = {}
+                if alcance:
+                    arbolPermisosDenegados[sistema][recurso][operacion][alcance] = {}
+                    if modelo and modelo != '*':
+                        arbolPermisosDenegados[sistema][recurso][operacion][alcance] = [x for x in modelo if x not in modelos]
 
+
+    if sistema in arbolPermisosDenegados.keys():
+        if recurso in arbolPermisosDenegados[sistema].keys():
+            if operacion in arbolPermisosDenegados[sistema][recurso].keys():
+                if alcance in arbolPermisosDenegados[sistema][recurso][operacion].keys():
+                    if modelo in arbolPermisosDenegados[sistema][recurso][operacion][alcance].keys():
+
+    else:
+        arbolPermisosDenegados[sistema] = {x:{} for x in recursos}
+        if recurso:
+            arbolPermisosDenegados[sistema][recurso] = {x:{} for x in operaciones}
+            if operacion:
+                arbolPermisosDenegados[sistema][recurso][operacion] = {x:{} for x in alcances}
+                if alcance:
+                    arbolPermisosDenegados[sistema][recurso][operacion][alcance] = {}
+                    if modelo and modelo != '*':
+                        arbolPermisosDenegados[sistema][recurso][operacion][alcance] = [x for x in modelo if x not in modelos]
