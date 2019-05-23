@@ -35,6 +35,10 @@ def permisos_recurso_completo():
 
 @pytest.fixture
 def permisos_recurso_solo_operacion():
+    '''
+        una operación para el recurso permitida. irrestricta. 
+        los indices pares son los permisos en default
+    '''
     permisos = []
     for op in ['create','read','update','delete']:
         p = [
@@ -186,54 +190,35 @@ def test_operacion_recurso(permisos_recurso_solo_operacion):
     """
     import warden.api.rest.permisos as perm
 
-    for i, permisos in enumerate(permisos_recurso_solo_operacion):
+    equivalencias_operaciones = {
+        'delete': ['delete'],
+        'update': ['update'],
+        'read': ['read'],
+        'create': ['create','read','update'],
+        '*': ['create','read','update','delete']
+    }
+
+    for a, permisos in enumerate(permisos_recurso_solo_operacion):
         op = permisos['operacion']
-        p = permisos['permisos']
-        es_default = i % 2 == 0
+        permisos_posibles = permisos['permisos']
 
-        print(f'Operación: {op}, Permiso: {p}, Default: {es_default}')
+        for i, p in enumerate(permisos_posibles):
+            es_default = i % 2 == 0
 
-        ''' acceso a todo el recurso esta denegado '''
-        assert perm.chequear_permisos('1',[f'urn:sistema:recurso'], p) == (False, set())
+            ''' acceso a todo el recurso esta denegado '''
+            assert perm.chequear_permisos('1',[f'urn:sistema:recurso'], p) == (False, set())
 
-        permisos_ok_a_chequear = []
-        permisos_den_a_chequear = []
-        permisos_en_default = []
-        
-        for _op in ['create','update','delete','read']:
-            ''' la operación permitida por los permisos es cuando op == _op '''
-            if op == _op:
-                ''' cuando es_default == True entonces el permiso está en la sección de default. debe permitirle a todos los usuarios '''
-                if es_default:
-                    permisos_en_default.append(f'urn:sistema:recurso:{op}')
-                    for usuario in ['2','3','4']:
-                        assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{op}'], p) == (True, {f'urn:sistema:recurso:{op}'})
+            for _op in ['create','update','delete','read']:
+
+                ''' la operación permitida por los permisos es cuando op == _op '''
+                if _op in equivalencias_operaciones[op]:
+                    assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{_op}'], p) == (True, {f'urn:sistema:recurso:{_op}'})
+                    for alc in ['sub','one','self','many','any']:
+                        assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{_op}:{alc}'], p) == (True, {f'urn:sistema:recurso:{_op}:{alc}'})
+                        assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{_op}:{alc}:restricted'], p) == (False, set())
                 else:
-                    for usuario in ['2','3','4']:
-                        assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{op}'], p) == (False, set())
+                    assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{_op}'], p) == (False,set())
+                    for alc in ['sub','one','self','many','any']:
+                        assert perm.chequear_permisos('1',[f'urn:sistema:recurso:_{op}:{alc}'], p) == (False, set())
+                        assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{_op}:{alc}:restricted'], p) == (False, set())
 
-                assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{op}'], p) == (True, {f'urn:sistema:recurso:{op}'})
-                permisos_ok_a_chequear.append(f'urn:sistema:recurso:{op}')
-                for alc in ['sub','one','self','many','any']:
-                    ''' cuando es_default == True entonces el permiso está en la sección de default. debe permitirle a todos los usuarios '''
-                    if es_default:
-                        for usuario in ['2','3','4']:
-                            assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{op}:{alc}'], p) == (True, {f'urn:sistema:recurso:{op}:{alc}'})
-                            assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{op}:{alc}:restricted'], p) == (False, set())
-                    else:
-                        for usuario in ['2','3','4']:
-                            assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{op}:{alc}'], p) == (False, set())
-                            assert perm.chequear_permisos(usuario,[f'urn:sistema:recurso:{op}:{alc}:restricted'], p) == (False, set())
-                    assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{op}:{alc}'], p) == (True, {f'urn:sistema:recurso:{op}:{alc}'})
-                    assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{op}:{alc}:restricted'], p) == (False, set())
-                    permisos_ok_a_chequear.append(f'urn:sistema:recurso:{op}:{alc}')
-            else:
-                assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{op}'], p) == (False,set())
-                permisos_den_a_chequear.append(f'urn:sistema:recurso:{op}')
-                for alc in ['sub','one','self','many','any']:
-                    assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{op}:{alc}'], p) == (False, set())
-                    assert perm.chequear_permisos('1',[f'urn:sistema:recurso:{op}:{alc}:restricted'], p) == (False, set())
-                    permisos_den_a_chequear.append(f'urn:sistema:recurso:{op}:{alc}')
-
-        assert perm.chequear_permisos('1',permisos_ok_a_chequear, p) == (True, set(permisos_ok_a_chequear))
-        assert perm.chequear_permisos('1', permisos_den_a_chequear, p) == (False, set())
