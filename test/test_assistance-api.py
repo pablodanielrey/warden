@@ -11,7 +11,7 @@ TEST ---> Se van a chequear permisos obtenidos al consultar UIDS ficticias:
 """
 
 prefijos = ['urn']
-sistemas = ['assistance']
+sistemas = ['assistance','*']
 recursos = ['users','places','assistance-report','schedule','justifications','justification-date','justification-report','general-assistance-report','devices','logs','*']
 operaciones = ['create','read','update','delete','*']
 alcances = ['any','many', 'sub', 'one', 'self','*']
@@ -50,10 +50,11 @@ permisos = {
             "urn:assistance:places:read"
         ],
         "default": [
+            "urn:*:*:*",
             "urn:assistance:users:read:self",
             "urn:assistance:users:read:many:restricted",
             "urn:assistance:places:read:many",
-            #"urn:assistance:places:read:self",
+            "urn:assistance:places:read:self",
             "urn:assistance:assistance-report:read:many:restricted",
             "urn:assistance:justifications-report:read:many:restricted",
             "urn:assistance:general-assistance-report:read:many:restricted",
@@ -63,6 +64,19 @@ permisos = {
             "urn:assistance:justification-date:read:self",
             "urn:assistance:justification-date:create:many:restricted",
             "urn:assistance:justification-date:delete:many:restricted",
+            #Permisos con error ----> VER
+            "urn:assistance:logs:update:any",
+            "urn:assistance:assistance-report:read:self:restricted",
+            "urn:assistance:justifications:read:self:restricted",
+            "urn:assistance:justification-date:create:self:restricted",
+            "urn:assistance:justification-date:read:many:restricted",
+            "urn:assistance:justification-date:update:many:restricted",
+            "urn:assistance:justification-date:update:self:restricted",
+            "urn:assistance:justification-date:delete:self:restricted",
+            "urn:assistance:justification-date:*:many:restricted",
+            "urn:assistance:general-assistance-report:read:self:restricted",
+            
+            
         ]
     }
 
@@ -137,8 +151,12 @@ def test_default():
                 for o in denegados[urn][s][r]:
                     for a in denegados[urn][s][r][o]:
                         for m in denegados[urn][s][r][o][a]:
-                            print(f'{urn}:{s}:{r}:{o}:{a}:{m}')
-                            assert p.chequear_permisos('default',[f'{urn}:{s}:{r}:{o}:{a}'], permisos) == (False, set())    
+                            if m == 'restricted':
+                                print(f'{urn}:{s}:{r}:{o}:{a}:{m}')
+                                assert p.chequear_permisos('default',[f'{urn}:{s}:{r}:{o}:{a}:{m}'], permisos) == (False, set())
+                            else:
+                                print(f'{urn}:{s}:{r}:{o}:{a}')
+                                assert p.chequear_permisos('default',[f'{urn}:{s}:{r}:{o}:{a}'], permisos) == (False, set())
 
 def generarPermisosDenegados(usuario):
     """
