@@ -243,6 +243,9 @@ def options():
     return 204
 """
 
+from . import warden
+
+
 def main():
     app.run(host='0.0.0.0', port=10502, debug=False)
 
