@@ -23,14 +23,17 @@ class WardenModel:
                 ]
             }
         """
+        count = 0
         system = permissions['system']
         for p in permissions['permissions']:
-            if session.query(Permission).filter(Permission.permission == p, system == p.system).count() <= 0:
+            if session.query(Permission).filter(Permission.permission == p, Permission.system == system).count() <= 0:
                 _p = Permission()
                 _p.id = str(uuid.uuid4())
-                _p.system = p.system
-                _p.name = p.name
+                _p.system = system
+                _p.permission = p
                 session.add(_p)
+                count += 1
+        return count
 
     @classmethod
     def permissions_by_uid(cls, session, uid):

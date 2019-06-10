@@ -244,7 +244,7 @@ def options():
 """
 
 from . import warden
-
+app.register_blueprint(warden.bp)
 
 def main():
     app.run(host='0.0.0.0', port=10502, debug=False)
