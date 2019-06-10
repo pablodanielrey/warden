@@ -31,7 +31,8 @@ setup(name='warden-api',
                             'gunicorn',
                             'ptvsd',
                             'microservices_common>=2.0.4a4',
-                            'requests'
+                            'requests',
+                            'psycopg2-binary'
                             ],
           entry_points={
             'console_scripts': [

@@ -4,59 +4,8 @@ import os
 import json
 import uuid
 import datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
-
-class Permission(Base):
-    __tablename__ = 'permissions'
-
-    id = Column(String(), primary_key=True, default=None)
-    created = Column(DateTime(), default=datetime.datetime.utc_now())
-    modified = Column(DateTime())
-    system = Column(String())
-    permission = Column(String())
-
-    def __json__(self):
-        return self.__dict__
-
-
-class Role(Base):
-    ___tablename__ = 'roles'
-
-    id = Column(String(), primary_key=True, default=None)
-    created = Column(DateTime())
-    modified = Column(DateTime())
-    name = Column(String())
-
-    def __json__(self):
-        return self.__dict__
-
-
-class RolePermissions(Base):
-    __tablename__ = 'role_permissions'
-
-    id = Column(String(), primary_key=True, default=None)
-    role_id = Column(String(), ForeignKey('roles.id'))
-    permission_id = Column(String(), ForeignKey('permissions.id'))
-
-    def __json__(self):
-        return self.__dict__
-
-class UserPermissions(Base):
-    __tablename__ = 'user_permissions'
-
-    id = Column(String(), primary_key=True, default=None)
-    created = Column(DateTime())
-    modified = Column(DateTime())
-    permission_id = Column(String(), ForeignKey('permissions.id'))
-    user_id = Column(String())
-
-    def __json__(self):
-        return self.__dict__
-
-
+from warden.model.entities.Warden import *
 
 class WardenModel:
 
