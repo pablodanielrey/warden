@@ -25,4 +25,7 @@ def registrar_permisos():
 @bp.route('/permisos', methods=['GET'])
 def obtener_permisos_disponibles():
     with obtener_session() as session:
-        return jsonify(WardenModel.permissions(session))
+        #return jsonify(WardenModel.permissions(session))
+        _p = WardenModel.permissions(session)
+        s = [{'permission':p.permission, 'system':p.system} for p in _p]
+        return jsonify(s)

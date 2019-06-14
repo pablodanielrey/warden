@@ -11,7 +11,7 @@ class WardenModel:
 
     @classmethod
     def permissions(cls, session):
-        return [session.query(Permission).all()]
+        return session.query(Permission).all()
 
     @classmethod
     def register_permissions(cls, session, permissions):
