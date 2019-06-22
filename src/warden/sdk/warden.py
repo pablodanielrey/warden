@@ -77,14 +77,14 @@ class Warden:
             return js['result']
         return None
 
-    def register_system_perms(self, token, permisos=[]):
+    def register_system_perms(self, token, system, permisos=[]):
         assert token is not None
         headers = {
             'Authorization': 'Bearer {}'.format(token),
             'Accept':'application/json'
         }
         request = {
-            'system': 'gelis-api',
+            'system': system,
             'permissions': permisos
         }
         r = requests.post(self.warden_url + '/registrar_permisos', verify=self.verify, allow_redirects=False, headers=headers, json=request)
