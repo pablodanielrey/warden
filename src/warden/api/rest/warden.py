@@ -32,7 +32,7 @@ def obtener_permisos_disponibles():
 
 
 
-@bp.route(API_BASE + '/has_permissions', methods=['POST'])
+@bp.route('/has_permissions', methods=['POST'])
 def has_permissions(token=None):
     """
         chequea que la el usuario identificado por el token tenga como mínimo los permisos pasados en el requerimineto:
