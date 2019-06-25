@@ -30,6 +30,10 @@ def obtener_permisos_disponibles():
         s = [{'permission':p.permission, 'system':p.system} for p in _p]
         return jsonify(s)
 
+@bp.route('/usuarios/<uid>', methods=['PUT'])
+def actualizar_permisos_usuario(uid=None):
+        data = request.json
+        pass
 
 
 @bp.route('/has_permissions', methods=['POST'])
