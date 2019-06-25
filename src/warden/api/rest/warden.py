@@ -29,3 +29,39 @@ def obtener_permisos_disponibles():
         _p = WardenModel.permissions(session)
         s = [{'permission':p.permission, 'system':p.system} for p in _p]
         return jsonify(s)
+
+
+
+@bp.route(API_BASE + '/has_permissions', methods=['POST'])
+def has_permissions(token=None):
+    """
+        chequea que la el usuario identificado por el token tenga como mínimo los permisos pasados en el requerimineto:
+        el formato de la consutla es:
+        {
+            'permissions': [
+                perm1,
+                perm2,
+                perm3
+            ]
+        }
+        
+        formato de respuesta es:
+        {
+            status: number,
+            description: string,
+            result: boolean,
+            granted: string[]
+        }
+    """
+    assert token is not None
+    from . import permisos
+    uid = token['sub']
+    perms = request.json
+    if 'permissions' in perms:
+        granted, permissions_granted = permisos.chequear_permisos(uid, perms['permissions'], permissions)
+        if granted:
+            return {'status':200, 'description':'ok', 'result':granted, 'granted':list(permissions_granted)}
+        else:
+            return {'status':403, 'description':'forbidden', 'result':granted, 'granted':[]}
+    return {'status':500, 'description':'Invalid', 'result':False, 'granted':[]}
+
