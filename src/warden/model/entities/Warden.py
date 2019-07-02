@@ -14,6 +14,7 @@ class Role(Base):
     id = Column(String(), primary_key=True, default=None)
     created = Column(DateTime())
     modified = Column(DateTime())
+    eliminado = Column(DateTime())
     name = Column(String())
 
     def __json__(self):
@@ -26,6 +27,7 @@ class Permission(Base):
     id = Column(String(), primary_key=True, default=None)
     created = Column(DateTime(), default=datetime.datetime.utcnow())
     modified = Column(DateTime())
+    eliminado = Column(DateTime())
     system = Column(String())
     permission = Column(String())
 
@@ -50,6 +52,7 @@ class UserPermissions(Base):
     id = Column(String(), primary_key=True, default=None)
     created = Column(DateTime())
     modified = Column(DateTime())
+    eliminado = Column(DateTime())
     permission_id = Column(String(), ForeignKey('permissions.id'))
     user_id = Column(String())
 
