@@ -11,11 +11,15 @@ class WardenModel:
 
     @classmethod
     def permissions(cls, session):
+        """
+        Retorna lista de permisos registrados
+        """
         return session.query(Permission).all()
 
     @classmethod
     def register_permissions(cls, session, permissions):
         """
+        Registra la lista de permisos envidados
             permissions = {
                 system: string,
                 permissions = [
@@ -37,10 +41,16 @@ class WardenModel:
 
     @classmethod
     def permissions_by_uid(cls, session, uid):
-        return [p.permission for p in session.query(Permission).filter(Permission.user_id == uid).all()]
+        """
+        Retorna la lista de permisos existentes para el uid enviado como parametro
+        """
+        return session.query(Permission).join(UserPermissions).filter(UserPermissions.user_id == uid).all()
 
     @classmethod
     def register_user_permissions(cls, session, uid, permissions=[]):
+        """
+        Registra la lista de permisos para el uid enviado
+        """
         pids = [session.query(Permission.id).filter(Permission.permission == p) for p in permissions]
         for pid in pids:
             if session.query(UserPermissions).filter(UserPermissions.user_id == uid, UserPermissions.permission_id == pid).count() <= 0:
@@ -52,5 +62,8 @@ class WardenModel:
 
     @classmethod
     def register_user_role(cls, session, uid, role):
+        """
+        Registra los permisos todos de un rol a un uid
+        """
         pids = [p.permission_id for (r,p) in session.query(Role,RolePermissions).join(RolePermissions).filter(Role.name == role).all()]
         return cls.register_user_permissions(uid, pids)
