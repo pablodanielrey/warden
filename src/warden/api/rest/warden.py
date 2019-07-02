@@ -22,8 +22,6 @@ def registrar_permisos():
         r = WardenModel.register_permissions(session, data)
         session.commit()
         return (str(r), 200)
-    
-
 
 @bp.route('/permisos', methods=['GET'])
 def obtener_permisos_disponibles():
@@ -53,9 +51,16 @@ def actualizar_permisos_usuario(uid=None):
     Actualiza los permisos recibidos por parametro para el uid
     #TODO desarrollar metodo
     """
+    assert uid is not None
     data = request.json
-    pass
-
+    with obtener_session() as session:
+        for p in data:
+            if p['habilitado']:
+                WardenModel.register_user_permissions(session,uid,[p['permiso']])
+            else:
+                WardenModel.delete_user_permissions(session,uid,[p['permiso']])
+        session.commit()
+        return ('ok',200)
 
 @bp.route('/has_permissions', methods=['POST'])
 def has_permissions(token=None):

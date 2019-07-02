@@ -14,7 +14,7 @@ class WardenModel:
         """
         Retorna lista de permisos registrados
         """
-        return session.query(Permission).all()
+        return session.query(Permission).filter(Permission.eliminado == None).all()
 
     @classmethod
     def register_permissions(cls, session, permissions):
@@ -44,14 +44,17 @@ class WardenModel:
         """
         Retorna la lista de permisos existentes para el uid enviado como parametro
         """
-        return session.query(Permission).join(UserPermissions).filter(UserPermissions.user_id == uid).all()
+        return session.query(Permission).join(UserPermissions).filter(UserPermissions.user_id == uid,UserPermissions.eliminado == None).all()
 
     @classmethod
     def register_user_permissions(cls, session, uid, permissions=[]):
         """
         Registra la lista de permisos para el uid enviado
         """
-        pids = [session.query(Permission.id).filter(Permission.permission == p) for p in permissions]
+        pids = []
+        for p in permissions:
+            tmp = session.query(Permission.id).filter(Permission.permission == p).first()
+            pids.append(tmp)
         for pid in pids:
             if session.query(UserPermissions).filter(UserPermissions.user_id == uid, UserPermissions.permission_id == pid).count() <= 0:
                 per = UserPermissions()
@@ -59,6 +62,17 @@ class WardenModel:
                 per.user_id = uid
                 per.permission_id = pid
                 session.add(per)
+
+    @classmethod
+    def delete_user_permissions(cls, session, uid, permissions=[]):
+        """
+        Elimina los permisos de la lista enviada para el uid enviado
+        """
+        for p in permissions:
+            perm = session.query(UserPermissions).join(Permission).filter(Permission.permission == p,UserPermissions.eliminado == None).first()
+            if perm:
+                perm.eliminado = datetime.datetime.now()
+                session.add(perm)    
 
     @classmethod
     def register_user_role(cls, session, uid, role):
