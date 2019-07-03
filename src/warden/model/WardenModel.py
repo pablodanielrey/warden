@@ -54,9 +54,9 @@ class WardenModel:
         pids = []
         for p in permissions:
             tmp = session.query(Permission.id).filter(Permission.permission == p).first()
-            pids.append(tmp)
+            pids.append(tmp[0])
         for pid in pids:
-            if session.query(UserPermissions).filter(UserPermissions.user_id == uid, UserPermissions.permission_id == pid).count() <= 0:
+            if session.query(UserPermissions).filter(UserPermissions.user_id == uid, UserPermissions.permission_id == pid, UserPermissions.eliminado == None).count() <= 0:
                 per = UserPermissions()
                 per.id = str(uuid.uuid4())
                 per.user_id = uid
@@ -69,7 +69,7 @@ class WardenModel:
         Elimina los permisos de la lista enviada para el uid enviado
         """
         for p in permissions:
-            perm = session.query(UserPermissions).join(Permission).filter(Permission.permission == p,UserPermissions.eliminado == None).first()
+            perm = session.query(UserPermissions).join(Permission).filter(Permission.permission == p,UserPermissions.user_id == uid,UserPermissions.eliminado == None).first()
             if perm:
                 perm.eliminado = datetime.datetime.now()
                 session.add(perm)    
