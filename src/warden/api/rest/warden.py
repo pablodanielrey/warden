@@ -49,7 +49,6 @@ def obtener_permisos_usuario(uid=None):
 def actualizar_permisos_usuario(uid=None):
     """
     Actualiza los permisos recibidos por parametro para el uid
-    #TODO desarrollar metodo
     """
     assert uid is not None
     data = request.json
