@@ -4,7 +4,38 @@ from warden.model import obtener_session
 from warden.model.WardenModel import WardenModel
 
 
+from . import permisos
+
 bp = Blueprint('warden', __name__, url_prefix='/warden/api/v2.0')
+
+SYSTEM = 'warden-api'
+PERMISSION_CREATE = 'urn:warden:permission:create'
+PERMISSION_READ = 'urn:warden:permission:read'
+PERMISSION_DELETE = 'urn:warden:permission:delete'
+USER_PERMISSION_CREATE = 'urn:warden:user_permission:create'
+USER_PERMISSION_READ = 'urn:warden:user_permission:read'
+USER_PERMISSION_DELETE = 'urn:warden:user_permission:delete'
+
+@bp.route('/autoregistrarpermisos', methods=['GET'])
+def autoregistrar_permisos():
+    try:
+        warden_permissions = {
+            'system' : SYSTEM,
+            'permissions': [
+                PERMISSION_CREATE,
+                PERMISSION_READ,
+                PERMISSION_DELETE,
+                USER_PERMISSION_CREATE,
+                USER_PERMISSION_READ,
+                USER_PERMISSION_DELETE
+            ]
+        }
+        with obtener_session() as session:
+            datos = WardenModel.register_permissions(session,warden_permissions)
+            session.commit()
+            return jsonify({'status':200, 'data':datos})
+    except Exception as e:
+        return jsonify({'status':500, 'response': str(e)})
 
 @bp.before_app_request
 def antes_de_cada_requerimiento():
@@ -29,7 +60,6 @@ def obtener_permisos_disponibles():
     Retorna una lista de todos los permisos disponibles registrados
     """
     with obtener_session() as session:
-        #return jsonify(WardenModel.permissions(session))
         _p = WardenModel.permissions(session)
         s = [{'permission':p.permission, 'system':p.system} for p in _p]
         return jsonify(s)
@@ -83,14 +113,19 @@ def has_permissions(token=None):
     }
     """
     assert token is not None
-    from . import permisos
+    
     uid = token['sub']
     perms = request.json
     if 'permissions' in perms:
-        granted, permissions_granted = permisos.chequear_permisos(uid, perms['permissions'], permissions)
+        granted, permissions_granted = _chequear_permisos(uid, perms['permissions'])
         if granted:
             return {'status':200, 'description':'ok', 'result':granted, 'granted':list(permissions_granted)}
         else:
             return {'status':403, 'description':'forbidden', 'result':granted, 'granted':[]}
     return {'status':500, 'description':'Invalid', 'result':False, 'granted':[]}
 
+
+def _chequear_permisos(uid, permisos=[]):
+    from . import permisos
+    granted, permissions_granted = permisos.chequear_permisos(uid, perms['permissions'], permissions)
+    return (granted, permissions_granted)

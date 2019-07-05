@@ -30,10 +30,11 @@ class WardenModel:
         count = 0
         system = permissions['system']
         for p in permissions['permissions']:
-            if session.query(Permission).filter(Permission.permission == p, Permission.system == system).count() <= 0:
+            if session.query(Permission).filter(Permission.permission == p, Permission.system == system, Permission.eliminado == None).count() <= 0:
                 _p = Permission()
                 _p.id = str(uuid.uuid4())
                 _p.system = system
+                _p.created = datetime.datetime.utcnow()
                 _p.permission = p
                 session.add(_p)
                 count += 1
@@ -60,6 +61,7 @@ class WardenModel:
                 per = UserPermissions()
                 per.id = str(uuid.uuid4())
                 per.user_id = uid
+                per.created = datetime.datetime.utcnow()
                 per.permission_id = pid
                 session.add(per)
 
