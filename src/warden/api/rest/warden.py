@@ -1,7 +1,15 @@
+import os
 from flask import Blueprint, request, jsonify
 
 from warden.model import obtener_session
 from warden.model.WardenModel import WardenModel
+
+
+VERIFY_SSL = bool(int(os.environ.get('VERIFY_SSL',0)))
+OIDC_ADMIN_URL = os.environ['OIDC_ADMIN_URL']
+
+from .TokenIntrospection import TokenIntrospection
+rs = TokenIntrospection(OIDC_ADMIN_URL, verify=VERIFY_SSL)
 
 
 from . import permisos
@@ -81,6 +89,19 @@ def actualizar_permisos_usuario(uid=None):
     Actualiza los permisos recibidos por parametro para el uid
     """
     assert uid is not None
+
+    token = rs.get_valid_token()
+    assert token is not None
+    caller_uid = token['sub']
+
+    if uid == caller_uid:
+        if not _chequear_permisos(uid, ['urn:warden:user_permission:create:self']):
+            return jsonify({'status':403, response:'No tiene los permisos suficientes'})
+
+    if uid != caller_uid:
+        if not _chequear_permisos(uid, ['urn:warden:user_permission:create']):
+            return jsonify({'status':403, response:'No tiene los permisos suficientes'})
+
     data = request.json
     with obtener_session() as session:
         for p in data:
@@ -112,6 +133,7 @@ def has_permissions(token=None):
         granted: string[]
     }
     """
+    token = rs.get_valid_token()
     assert token is not None
     
     uid = token['sub']
@@ -119,13 +141,17 @@ def has_permissions(token=None):
     if 'permissions' in perms:
         granted, permissions_granted = _chequear_permisos(uid, perms['permissions'])
         if granted:
-            return {'status':200, 'description':'ok', 'result':granted, 'granted':list(permissions_granted)}
+            return jsonify({'status':200, 'description':'ok', 'result':granted, 'granted':list(permissions_granted)})
         else:
-            return {'status':403, 'description':'forbidden', 'result':granted, 'granted':[]}
-    return {'status':500, 'description':'Invalid', 'result':False, 'granted':[]}
+            return jsonify({'status':403, 'description':'forbidden', 'result':granted, 'granted':[]})
+    return jsonify({'status':500, 'description':'Invalid', 'result':False, 'granted':[]})
 
 
-def _chequear_permisos(uid, permisos=[]):
+def _chequear_permisos(uid, permisos_usr=[]):
     from . import permisos
-    granted, permissions_granted = permisos.chequear_permisos(uid, perms['permissions'], permissions)
+    with obtener_session() as session:
+        permissions = WardenModel.permissions_by_uid(session,uid)
+        lista_permisos = {uid:[p.permission for p in permissions]}
+
+    granted, permissions_granted = permisos.chequear_permisos(uid, permisos_usr, lista_permisos)
     return (granted, permissions_granted)

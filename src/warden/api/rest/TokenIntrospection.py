@@ -20,6 +20,13 @@ class TokenIntrospection:
                 return auth[1]
         return None
 
+    def get_token(self):
+        return self._bearer_token(flask.request.headers)
+
+    def get_valid_token(self):
+        tk = self.get_token()
+        return self._check_valid_token(tk)
+
     def introspect_token(self, token, scopes=[]):
         data = {
             'token':token
@@ -41,6 +48,20 @@ class TokenIntrospection:
             return None
         return tk
 
+    def _check_valid_token(self, token):
+        return self.introspect_token(token)
+
+    def _check_token_scopes(self, token, scopes=[]):
+        tk = None
+        tk = self.introspect_token(token)
+        if tk and scopes and len(scopes) > 0:
+            tscopes = tk['scope'].lower().split(' ')
+            for s in scopes:
+                if s not in tscopes:
+                    self.logging.warn('scope insuficiente')
+                    return None
+        return tk
+
     def require_token_scopes(self, scopes=[]):
         def real_decorator(f):
             @wraps(f)
@@ -49,17 +70,10 @@ class TokenIntrospection:
                 self.logging.debug('require_token_scopes: {} {}'.format(token, scopes))
                 if not token:
                     return self._invalid_token()
-                tk = self.introspect_token(token)
+                tk = self._check_token_scopes(token, scopes)
                 if not tk:
-                    return self._invalid_request()
-                if scopes and len(scopes) > 0:
-                    tscopes = tk['scope'].lower().split(' ')
-                    for s in scopes:
-                        if s not in tscopes:
-                            self.logging.warn('scope insuficiente')
-                            return self._insufficient_scope()
+                    return self._insufficient_scope()
                 kwargs['token'] = tk
-                #kwargs['access'] = acc
                 return f(*args, **kwargs)
             return wrapper
         return real_decorator
@@ -73,7 +87,7 @@ class TokenIntrospection:
             token = self._bearer_token(flask.request.headers)
             if not token:
                 return self._invalid_token()
-            tk = self.introspect_token(token)
+            tk = self._check_valid_token(token)
             if not tk:
                 return self._invalid_request()
             kwargs['token'] = tk
