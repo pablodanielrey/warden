@@ -73,7 +73,7 @@ class WardenModel:
         for p in permissions:
             perm = session.query(UserPermissions).join(Permission).filter(Permission.permission == p,UserPermissions.user_id == uid,UserPermissions.eliminado == None).first()
             if perm:
-                perm.eliminado = datetime.datetime.now()
+                perm.eliminado = datetime.datetime.utcnow()
                 session.add(perm)    
 
     @classmethod
