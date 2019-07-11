@@ -93,14 +93,14 @@ def actualizar_permisos_usuario(uid=None):
     token = rs.get_valid_token()
     assert token is not None
     caller_uid = token['sub']
-
+    
     if uid == caller_uid:
-        if not _chequear_permisos(uid, ['urn:warden:user_permission:create:self']):
-            return jsonify({'status':403, response:'No tiene los permisos suficientes'})
+        if not _chequear_permisos(caller_uid, ['urn:warden:user_permission:create:self']):
+            return jsonify({'status':403, 'response':'No tiene los permisos suficientes'})
 
     if uid != caller_uid:
-        if not _chequear_permisos(uid, ['urn:warden:user_permission:create']):
-            return jsonify({'status':403, response:'No tiene los permisos suficientes'})
+        if not _chequear_permisos(caller_uid, ['urn:warden:user_permission:create']):
+            return jsonify({'status':403, 'response':'No tiene los permisos suficientes'})
 
     data = request.json
     with obtener_session() as session:
@@ -152,6 +152,5 @@ def _chequear_permisos(uid, permisos_usr=[]):
     with obtener_session() as session:
         permissions = WardenModel.permissions_by_uid(session,uid)
         lista_permisos = {uid:[p.permission for p in permissions]}
-
     granted, permissions_granted = permisos.chequear_permisos(uid, permisos_usr, lista_permisos)
-    return (granted, permissions_granted)
+    return granted
