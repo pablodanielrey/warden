@@ -66,7 +66,13 @@ def registrar_permisos():
 def obtener_permisos_disponibles():
     """
     Retorna una lista de todos los permisos disponibles registrados
-    """
+    """    
+    token = rs.get_valid_token()
+    assert token is not None
+    caller_uid = token['sub']
+    if not _chequear_permisos(caller_uid, ['urn:warden:permission:read']):
+        return jsonify({'status':403, 'response':'No tiene los permisos suficientes'})
+
     with obtener_session() as session:
         _p = WardenModel.permissions(session)
         s = [{'permission':p.permission, 'system':p.system} for p in _p]
