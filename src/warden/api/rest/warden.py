@@ -70,7 +70,8 @@ def obtener_permisos_disponibles():
     token = rs.get_valid_token()
     assert token is not None
     caller_uid = token['sub']
-    if not _chequear_permisos(caller_uid, ['urn:warden:permission:read']):
+    acceso, lista = _chequear_permisos(caller_uid, ['urn:warden:permission:read'])
+    if not acceso:
         return jsonify({'status':403, 'response':'No tiene los permisos suficientes'})
 
     with obtener_session() as session:
@@ -83,7 +84,14 @@ def obtener_permisos_usuario(uid=None):
     """
     Retorna la lista de permisos disponibles para ese usuario
     """
-    assert uid is not None        
+    assert uid is not None
+    token = rs.get_valid_token()
+    assert token is not None
+    caller_id = token['sub']
+    acceso, lista = _chequear_permisos(caller_id,['urn:warden:user_permission:read'])
+    if not acceso:
+        return jsonify({'status':403, 'response':'No tiene los permisos suficientes'})
+    
     with obtener_session() as session:
         permisos = WardenModel.permissions_by_uid(session,uid)
         perm = [{'permission':p.permission,'system':p.system} for p in permisos]
@@ -101,11 +109,13 @@ def actualizar_permisos_usuario(uid=None):
     caller_uid = token['sub']
     
     if uid == caller_uid:
-        if not _chequear_permisos(caller_uid, ['urn:warden:user_permission:create:self']):
+        acceso, lista = _chequear_permisos(caller_uid, ['urn:warden:user_permission:create:self'])
+        if not acceso:
             return jsonify({'status':403, 'response':'No tiene los permisos suficientes'})
 
     if uid != caller_uid:
-        if not _chequear_permisos(caller_uid, ['urn:warden:user_permission:create']):
+        acceso, lista = _chequear_permisos(caller_uid, ['urn:warden:user_permission:create'])
+        if not acceso:
             return jsonify({'status':403, 'response':'No tiene los permisos suficientes'})
 
     data = request.json
@@ -159,4 +169,4 @@ def _chequear_permisos(uid, permisos_usr=[]):
         permissions = WardenModel.permissions_by_uid(session,uid)
         lista_permisos = {uid:[p.permission for p in permissions]}
     granted, permissions_granted = permisos.chequear_permisos(uid, permisos_usr, lista_permisos)
-    return granted
+    return granted, permissions_granted
