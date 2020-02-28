@@ -8,7 +8,7 @@ import json
 import flask
 from flask import Flask, request, send_from_directory, jsonify, redirect, session, url_for, make_response, render_template
 from flask_jsontools import jsonapi
-from werkzeug.contrib.fixers import ProxyFix
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 VERIFY_SSL = bool(int(os.environ.get('VERIFY_SSL',0)))
 OIDC_ADMIN_URL = os.environ['OIDC_ADMIN_URL']
